@@ -1,0 +1,23 @@
+display-name-zh: RunningHub 多媒体生成
+version: 1.0.0
+tag-en: Multimedia Generation
+tag-cn: 多媒体生成
+complete-tags-en:
+- Multimedia Generation / Image
+- Multimedia Generation / Video
+- Multimedia Generation / Audio
+- Multimedia Generation / 3D
+- Multimedia Generation / AI App
+complete-tags-cn:
+- 多媒体生成 / 图片
+- 多媒体生成 / 视频
+- 多媒体生成 / 音频
+- 多媒体生成 / 3D
+- 多媒体生成 / AI 应用
+summary-en: Generate images, videos, audio, and 3D models via RunningHub API and run any RunningHub AI Application.
+summary-cn: 通过 RunningHub API 生成图片、视频、音频、3D 模型，并运行任意 RunningHub AI 应用（ComfyUI 工作流）。
+desc-en: Universal multimedia generation skill powered by the RunningHub API, covering 394 standard endpoints: text-to-image, image-to-image, image upscaling, text-to-video, image-to-video, start-end frame video, video extend/edit, motion control, multimodal video, TTS, music generation, voice cloning, text/image-to-3D, image and video understanding, plus unlimited user-created AI Applications (custom ComfyUI workflows). The Skill presents curated model menus for video and image generation, routes natural language requests to the best endpoint, runs tasks with progress notification, downloads results locally, and reports cost in a warm conversational style.
+desc-cn: 由 RunningHub API 驱动的通用多媒体生成技能，覆盖 394 个标准 API 端点：文生图、图生图、图片放大、文生视频、图生视频、首尾帧生成、视频续写/编辑、运动控制、多模态视频、文字转语音、音乐生成、声音克隆、文字/图片转 3D、图片与视频理解，以及无限的用户自建 AI 应用（ComfyUI 工作流）。技能会为视频和图片生成展示精选模型菜单，把自然语言请求路由到最合适的端点，运行任务时先通知再执行，将结果下载到本地并通过文件链接交付，同时用温暖的口吻报告花费。
+author-en: HM-RunningHub
+author-cn: HM-RunningHub
+source: github:HM-RunningHub/OpenClaw_RH_Skills
