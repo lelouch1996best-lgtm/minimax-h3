@@ -26,7 +26,7 @@ import tempfile
 import time
 from pathlib import Path
 
-BASE_URL = "https://www.runninghub.cn/openapi/v2"
+BASE_URL = os.environ.get("RUNNINGHUB_BASE_URL", "https://www.runninghub.cn/openapi/v2")
 ACCOUNT_STATUS_URL = "https://www.runninghub.cn/uc/openapi/accountStatus"
 POLL_ENDPOINT = "/query"
 UPLOAD_ENDPOINT = "/media/upload/binary"
