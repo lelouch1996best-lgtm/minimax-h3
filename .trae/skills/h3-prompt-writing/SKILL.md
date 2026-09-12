@@ -33,6 +33,30 @@ Read `references/ref-en.txt` for label rules, retention analysis, and complete e
 - Write rewrite sections in English; preserve dialogue, lyrics, and visible scene text in their original language.
 - Describe each shot by composition, subjects, environment, actions, camera, sound, and the exact point where referenced content appears.
 - Avoid plot summaries, unresolved reference labels, and timing that does not match the requested duration.
+
+## Audio Control Rules
+
+When the video requires **only sound effects and human voice** (no subtitles, no background music):
+
+| Rule | Implementation |
+|---|---|
+| No subtitles | All dialogue is audio-only via `<d>[Language]text</d>`. Add "No subtitles or captions appear on screen at any time." to `summary` or `detailed_description` opening. |
+| No background music | Set `non_diegetic_music` to `N/A`. Do not describe any score or audience-only music. |
+| Only sound effects | Put environmental and physical sounds in `overall_soundscape` (wind, footsteps, fabric rustling, crowd murmurs, etc.). |
+| Only human voice | All dialogue in `detailed_description` with `<Subject N> (Sx)` speaker IDs and `<d>` tags. No narration or voice-over unless explicitly requested. |
+
+### Audio-Minimal Template
+
+```text
+overall_soundscape: [Environmental ambience and physical sound effects only.]
+
+non_diegetic_music: N/A
+```
+
+Add this anti-subtitle clause to `summary` or `detailed_description`:
+```text
+No subtitles, captions, or on-screen text appear at any point in the video.
+```
 ## Tips for Better Results
 - Always match the total duration of the description to the requested video length (4–15 seconds).
 - Keep reference labels consistent (e.g. `<Picture 1>`, `<Video 1>`, `<Audio 1>`) across every section.
