@@ -1,0 +1,21 @@
+subject_definitions:
+<Subject 1> is Xuan Gu, the elite senior student, whose identity and costume come from the character sheet in <Picture 1> (ref_images.ref_image_0), a front-side-back turnaround on a white background: an aloof teenage boy with black hair worn short in front and long at the back tied into a low waist-length ponytail, wispy bangs partly covering his brows, narrow phoenix eyes with dark red eyeshadow and eyeliner, cool pale skin, a blue tassel earring on his right ear, wearing a deep navy single-breasted suit with gold buttons, a gold round school crest on the left chest, a white shirt with a slightly loosened burgundy narrow necktie, navy straight trousers and black loafers. His face, low waist-length ponytail, blue tassel earring, dark red eyeshadow and navy school uniform follow <Picture 1> consistently throughout the video.
+
+summary:
+[reference generation] The target video is a 15-second Korean-short-drama-style character introduction for an elite yet melancholic senior student, in soft luxurious indoor light. Shot 1: a European-style room with dark wood cabinets, a fireplace and white gauze curtains filtering soft backlight; Xuan Gu sits in a leather armchair, head slightly bowed, gaze falling obliquely downward, unsolvable melancholy in his narrow phoenix eyes, rim light tracing his low ponytail. Shot 2: a close-up framed below his chest: both arms reach forward mid-motion, and a gold round name badge engraved with the two Chinese characters 玄骨 beside a gold round school crest catches the light with quiet luxury. Shot 3: an overhead close-up of a dark wood table: two thick books lie still, their vertical Chinese spines reading 大道三千 and 少年问道, with a name card beside them bearing his name — the name is formally pinned onto this melancholic senior student.
+
+retention_analysis:
+<Subject 1> (appears in [Shot 1], [Shot 2]): fully_preserved — Xuan Gu's face, low waist-length ponytail, blue tassel earring, dark red eyeshadow and navy school uniform remain consistent with <Picture 1>; in Shot 2 only the area below his chest is shown, with the gold badge and crest as focal props.
+Environment and props: generated — the European interior, dark wood table, books and name card follow the description, with the Chinese book titles 大道三千 and 少年问道 and the badge name 玄骨 rendered as on-screen text.
+
+detailed_description:
+The target video is a cinematic Korean-webtoon-style character introduction scene, luxurious yet suffocating, in soft warm interior tones.
+[Shot 1] 0s–6s: a half-body emotional shot inside a European-style room — dark wood cabinets, a fireplace with embers, white gauze curtains filtering soft backlight; Xuan Gu (S1) sits in a leather armchair in his deep navy suit with slightly loosened burgundy tie, head slightly bowed, narrow phoenix eyes with dark red eyeshadow lowered toward the floor, lost in unspoken melancholy; rim light outlines the strands of his low waist-length ponytail.
+[Shot 2] 6s–10s: cut to a close-up framed below his chest — both of his arms reach forward in the middle of a motion, sleeves taut; in the soft light a gold round name badge engraved with the two Chinese characters 玄骨 and a gold round school crest gleam on his chest; shallow depth of field pulls the background into blur.
+[Shot 3] 10s–15s: an overhead close-up of a dark wood tabletop, like a library or lounge: two thick hardcover books lie side by side, their vertical Chinese spines reading 大道三千 and 少年问道; beside them rests a small elegant name card bearing the name 玄骨; the frame holds still on the static objects.
+
+overall_soundscape:
+A fireplace crackling softly with occasional pops, faint page turning, a quiet room tone; a soft tap as a card is set on the wood table.
+
+non_diegetic_music:
+A melancholic piano adagio in slow broken chords, with a low string bed swelling beneath his close-up; the music thins to near silence over the final still-life shot, leaving an elegant, unfinished suspense.
