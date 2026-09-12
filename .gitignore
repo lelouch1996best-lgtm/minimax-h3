@@ -28,3 +28,6 @@ venv/
 # Temporary files
 *.tmp
 *.temp
+
+#media
+*.mp4
