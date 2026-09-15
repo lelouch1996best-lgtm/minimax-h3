@@ -1,0 +1,68 @@
+{"event": "orchestrator_start", "total": 18, "batches": 6, "ts": "2026-09-15 11:19:05"}
+{"event": "batch_begin", "batch": 1, "members": ["E04", "E05", "E06"], "ts": "2026-09-15 11:19:05"}
+{"event": "submitted", "episode": "E04", "name": "紫灵", "taskId": "2099699499764244481", "ts": "2026-09-15 11:19:05"}
+{"event": "submitted", "episode": "E05", "name": "极阴", "taskId": "2099699513781608449", "ts": "2026-09-15 11:19:08"}
+{"event": "submitted", "episode": "E06", "name": "柳眉", "taskId": "2099699527534739457", "ts": "2026-09-15 11:19:11"}
+{"event": "task_success", "episode": "E04", "name": "紫灵", "coins": "261", "costtime": "652", "ts": "2026-09-15 11:30:26"}
+{"event": "downloaded", "episode": "E04", "size": 9896836, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E04_紫灵_20260915-113026.mp4", "ts": "2026-09-15 11:30:26"}
+{"event": "task_success", "episode": "E05", "name": "极阴", "coins": "300", "costtime": "750", "ts": "2026-09-15 11:31:57"}
+{"event": "downloaded", "episode": "E05", "size": 8292788, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E05_极阴_20260915-113157.mp4", "ts": "2026-09-15 11:31:58"}
+{"event": "task_success", "episode": "E06", "name": "柳眉", "coins": "300", "costtime": "748", "ts": "2026-09-15 11:31:58"}
+{"event": "downloaded", "episode": "E06", "size": 13586360, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E06_柳眉_20260915-113158.mp4", "ts": "2026-09-15 11:31:59"}
+{"event": "batch_end", "batch": 1, "done": 3, "of": 3, "ts": "2026-09-15 11:31:59"}
+{"event": "batch_begin", "batch": 2, "members": ["E07", "E08", "E09"], "ts": "2026-09-15 11:31:59"}
+{"event": "submitted", "episode": "E07", "name": "银月", "taskId": "2099702748164620289", "ts": "2026-09-15 11:31:59"}
+{"event": "submitted", "episode": "E08", "name": "辛如音", "taskId": "2099702761888378881", "ts": "2026-09-15 11:32:03"}
+{"event": "submitted", "episode": "E09", "name": "王蝉", "taskId": "2099702775817654273", "ts": "2026-09-15 11:32:06"}
+{"event": "task_success", "episode": "E09", "name": "王蝉", "coins": "246", "costtime": "613", "ts": "2026-09-15 11:42:20"}
+{"event": "downloaded", "episode": "E09", "size": 11697274, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E09_王蝉_20260915-114220.mp4", "ts": "2026-09-15 11:42:21"}
+{"event": "task_success", "episode": "E07", "name": "银月", "coins": "285", "costtime": "711", "ts": "2026-09-15 11:43:52"}
+{"event": "downloaded", "episode": "E07", "size": 15802494, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E07_银月_20260915-114352.mp4", "ts": "2026-09-15 11:43:53"}
+{"event": "task_success", "episode": "E08", "name": "辛如音", "coins": "287", "costtime": "717", "ts": "2026-09-15 11:44:23"}
+{"event": "downloaded", "episode": "E08", "size": 14010312, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E08_辛如音_20260915-114423.mp4", "ts": "2026-09-15 11:44:24"}
+{"event": "batch_end", "batch": 2, "done": 3, "of": 3, "ts": "2026-09-15 11:44:24"}
+{"event": "batch_begin", "batch": 3, "members": ["E10", "E11", "E12"], "ts": "2026-09-15 11:44:24"}
+{"event": "submitted", "episode": "E10", "name": "玄骨", "taskId": "2099705871620857858", "ts": "2026-09-15 11:44:24"}
+{"event": "submitted", "episode": "E11", "name": "燕如嫣", "taskId": "2099705885705330689", "ts": "2026-09-15 11:44:27"}
+{"event": "submitted", "episode": "E12", "name": "火龙童子", "taskId": "2099705899580084226", "ts": "2026-09-15 11:44:31"}
+{"event": "task_success", "episode": "E10", "name": "玄骨", "coins": "246", "costtime": "615", "ts": "2026-09-15 11:54:45"}
+{"event": "downloaded", "episode": "E10", "size": 9915063, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E10_玄骨_20260915-115445.mp4", "ts": "2026-09-15 11:54:45"}
+{"event": "task_success", "episode": "E12", "name": "火龙童子", "coins": "258", "costtime": "645", "ts": "2026-09-15 11:55:16"}
+{"event": "downloaded", "episode": "E12", "size": 12651598, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E12_火龙童子_20260915-115516.mp4", "ts": "2026-09-15 11:55:17"}
+{"event": "task_success", "episode": "E11", "name": "燕如嫣", "coins": "288", "costtime": "718", "ts": "2026-09-15 11:56:48"}
+{"event": "downloaded", "episode": "E11", "size": 10735149, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E11_燕如嫣_20260915-115648.mp4", "ts": "2026-09-15 11:56:48"}
+{"event": "batch_end", "batch": 3, "done": 3, "of": 3, "ts": "2026-09-15 11:56:48"}
+{"event": "batch_begin", "batch": 4, "members": ["E13", "E14", "E15"], "ts": "2026-09-15 11:56:48"}
+{"event": "submitted", "episode": "E13", "name": "青易", "taskId": "2099708995471368194", "ts": "2026-09-15 11:56:49"}
+{"event": "submitted", "episode": "E14", "name": "蛮胡子", "taskId": "2099709009182552066", "ts": "2026-09-15 11:56:52"}
+{"event": "submitted", "episode": "E15", "name": "穆兰圣女", "taskId": "2099709022855983105", "ts": "2026-09-15 11:56:55"}
+{"event": "task_success", "episode": "E13", "name": "青易", "coins": "286", "costtime": "715", "ts": "2026-09-15 12:09:12"}
+{"event": "downloaded", "episode": "E13", "size": 12104212, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E13_青易_20260915-120912.mp4", "ts": "2026-09-15 12:09:13"}
+{"event": "task_success", "episode": "E14", "name": "蛮胡子", "coins": "298", "costtime": "745", "ts": "2026-09-15 12:09:43"}
+{"event": "downloaded", "episode": "E14", "size": 15839341, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E14_蛮胡子_20260915-120943.mp4", "ts": "2026-09-15 12:09:44"}
+{"event": "task_success", "episode": "E15", "name": "穆兰圣女", "coins": "302", "costtime": "753", "ts": "2026-09-15 12:09:44"}
+{"event": "downloaded", "episode": "E15", "size": 15685567, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E15_穆兰圣女_20260915-120944.mp4", "ts": "2026-09-15 12:09:45"}
+{"event": "batch_end", "batch": 4, "done": 3, "of": 3, "ts": "2026-09-15 12:09:45"}
+{"event": "batch_begin", "batch": 5, "members": ["E16", "E17", "E18"], "ts": "2026-09-15 12:09:45"}
+{"event": "submitted", "episode": "E16", "name": "梅凝", "taskId": "2099712252050628609", "ts": "2026-09-15 12:09:45"}
+{"event": "submitted", "episode": "E17", "name": "宋玉", "taskId": "2099712265799565313", "ts": "2026-09-15 12:09:48"}
+{"event": "submitted", "episode": "E18", "name": "墨彩环", "taskId": "2099712279905009666", "ts": "2026-09-15 12:09:52"}
+{"event": "task_success", "episode": "E16", "name": "梅凝", "coins": "288", "costtime": "718", "ts": "2026-09-15 12:22:08"}
+{"event": "downloaded", "episode": "E16", "size": 12085715, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E16_梅凝_20260915-122208.mp4", "ts": "2026-09-15 12:22:08"}
+{"event": "task_success", "episode": "E17", "name": "宋玉", "coins": "284", "costtime": "709", "ts": "2026-09-15 12:22:09"}
+{"event": "downloaded", "episode": "E17", "size": 9063599, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E17_宋玉_20260915-122209.mp4", "ts": "2026-09-15 12:22:09"}
+{"event": "task_success", "episode": "E18", "name": "墨彩环", "coins": "301", "costtime": "752", "ts": "2026-09-15 12:22:40"}
+{"event": "downloaded", "episode": "E18", "size": 11220831, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E18_墨彩环_20260915-122240.mp4", "ts": "2026-09-15 12:22:40"}
+{"event": "batch_end", "batch": 5, "done": 3, "of": 3, "ts": "2026-09-15 12:22:40"}
+{"event": "batch_begin", "batch": 6, "members": ["E19", "E20", "E21"], "ts": "2026-09-15 12:22:40"}
+{"event": "submitted", "episode": "E19", "name": "凌玉灵", "taskId": "2099715505488351233", "ts": "2026-09-15 12:22:41"}
+{"event": "submitted", "episode": "E20", "name": "元瑶", "taskId": "2099715519631552514", "ts": "2026-09-15 12:22:44"}
+{"event": "submitted", "episode": "E21", "name": "李缨宁", "taskId": "2099715533565026305", "ts": "2026-09-15 12:22:47"}
+{"event": "task_success", "episode": "E19", "name": "凌玉灵", "coins": "288", "costtime": "718", "ts": "2026-09-15 12:35:03"}
+{"event": "downloaded", "episode": "E19", "size": 10211094, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E19_凌玉灵_20260915-123503.mp4", "ts": "2026-09-15 12:35:04"}
+{"event": "task_success", "episode": "E20", "name": "元瑶", "coins": "289", "costtime": "721", "ts": "2026-09-15 12:35:04"}
+{"event": "downloaded", "episode": "E20", "size": 9887687, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E20_元瑶_20260915-123504.mp4", "ts": "2026-09-15 12:35:05"}
+{"event": "task_success", "episode": "E21", "name": "李缨宁", "coins": "287", "costtime": "717", "ts": "2026-09-15 12:35:05"}
+{"event": "downloaded", "episode": "E21", "size": 16720509, "file": "d:\\work\\minimax_h3\\全员动作展示\\video\\全员动作展示E21_李缨宁_20260915-123505.mp4", "ts": "2026-09-15 12:35:06"}
+{"event": "batch_end", "batch": 6, "done": 3, "of": 3, "ts": "2026-09-15 12:35:06"}
+{"event": "orchestrator_done", "finished_count": 18, "ts": "2026-09-15 12:35:06"}
