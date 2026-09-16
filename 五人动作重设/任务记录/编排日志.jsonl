@@ -1,0 +1,21 @@
+{"event": "orchestrator_start", "total": 5, "batches": 2, "batch_sizes": [3, 2], "ts": "2026-09-15 23:29:28"}
+{"event": "batch_begin", "batch": 1, "members": ["梅凝", "凌玉灵", "元瑶"], "ts": "2026-09-15 23:29:28"}
+{"event": "submitted", "char": "梅凝", "taskId": "2099883313803255810", "ts": "2026-09-15 23:29:28"}
+{"event": "submitted", "char": "凌玉灵", "taskId": "2099883328525258754", "ts": "2026-09-15 23:29:32"}
+{"event": "submitted", "char": "元瑶", "taskId": "2099883342425186306", "ts": "2026-09-15 23:29:35"}
+{"event": "task_success", "char": "凌玉灵", "coins": "195", "costtime": "487", "ts": "2026-09-15 23:37:48"}
+{"event": "downloaded", "char": "凌玉灵", "size": 12407838, "file": "d:\\work\\minimax_h3\\五人动作重设\\video\\五人动作重设_凌玉灵_20260915-233748.mp4", "ts": "2026-09-15 23:37:49"}
+{"event": "task_success", "char": "元瑶", "coins": "196", "costtime": "489", "ts": "2026-09-15 23:37:49"}
+{"event": "downloaded", "char": "元瑶", "size": 10398409, "file": "d:\\work\\minimax_h3\\五人动作重设\\video\\五人动作重设_元瑶_20260915-233749.mp4", "ts": "2026-09-15 23:37:49"}
+{"event": "task_success", "char": "梅凝", "coins": "203", "costtime": "507", "ts": "2026-09-15 23:38:20"}
+{"event": "downloaded", "char": "梅凝", "size": 9891316, "file": "d:\\work\\minimax_h3\\五人动作重设\\video\\五人动作重设_梅凝_20260915-233820.mp4", "ts": "2026-09-15 23:38:20"}
+{"event": "batch_end", "batch": 1, "done": 3, "of": 3, "ts": "2026-09-15 23:38:20"}
+{"event": "batch_begin", "batch": 2, "members": ["燕如嫣", "幕沛灵"], "ts": "2026-09-15 23:38:20"}
+{"event": "submitted", "char": "燕如嫣", "taskId": "2099885538185269249", "ts": "2026-09-15 23:38:21"}
+{"event": "submitted", "char": "幕沛灵", "taskId": "2099885552248778753", "ts": "2026-09-15 23:38:24"}
+{"event": "task_success", "char": "燕如嫣", "coins": "187", "costtime": "466", "ts": "2026-09-15 23:46:32"}
+{"event": "downloaded", "char": "燕如嫣", "size": 5883270, "file": "d:\\work\\minimax_h3\\五人动作重设\\video\\五人动作重设_燕如嫣_20260915-234632.mp4", "ts": "2026-09-15 23:46:33"}
+{"event": "task_success", "char": "幕沛灵", "coins": "190", "costtime": "475", "ts": "2026-09-15 23:46:33"}
+{"event": "downloaded", "char": "幕沛灵", "size": 11796784, "file": "d:\\work\\minimax_h3\\五人动作重设\\video\\五人动作重设_幕沛灵_20260915-234633.mp4", "ts": "2026-09-15 23:46:34"}
+{"event": "batch_end", "batch": 2, "done": 2, "of": 2, "ts": "2026-09-15 23:46:34"}
+{"event": "orchestrator_done", "finished_count": 5, "ts": "2026-09-15 23:46:34"}
