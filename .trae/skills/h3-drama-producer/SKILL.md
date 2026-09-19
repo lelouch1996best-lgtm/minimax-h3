@@ -192,7 +192,7 @@ Step 3 检索不到的角色/场景/道具，用 **65535 API** 生成。**生成
 
 ## Step 5 — 生成 H3 提示词（h3-prompt-writing）
 
-**不使用 minimax-h3-prompt 系列**。通过 Skill 工具调用 `h3-prompt-writing` 技能（**不得仅读其参考文件代替调用**——技能正文可能含参考文件之外的规则），按 Ref2VA 原生结构生成每集提示词：
+通过 Skill 工具调用 `h3-prompt-writing` 技能（**不得仅读其参考文件代替调用**——技能正文可能含参考文件之外的规则），按 Ref2VA 原生结构生成每集提示词：
 
 - 按其 `references/ref-en.txt`（Ref2VA）规范执行，读规范后再动笔
 - **每集时长按 Step 2 分集表**（4—15s 灵活，不再固定 15s）
@@ -317,6 +317,7 @@ name = upload_file(key, r'<本地图片绝对路径>')   # 返回 api/xxx.png
 - 两套接口均**内容寻址**：同一文件返回相同 hash 文件名，隔天重传文件名不变；跨集复用角色无需重传，路径映射缓存在 `任务记录\上传结果.json`
 - **上传链接仅一天有效**：正式出片前如隔天需重新上传（文件名不变，nodeInfoList/工作流无需改）
 - 上传不产生费用
+- **上传后勿立即提交任务**：openapi/api 短路径写入工作区有同步延迟（分钟级），上传后秒提交会在 LoadImage 节点报「No such file or directory」**零扣费失败**（2026-09-18 E05 实测 node 6）；上传与提交之间留 2—5 分钟，失败后隔几分钟重提同一 payload 即可，不算 payload 错误
 
 ## Step 8 — 构建 payload 并校验
 
@@ -367,16 +368,16 @@ payload 摘要：E01-E03，每集提示词开头 100 字
 ### 硬性约束
 
 - **账户同时最多 3 个任务**：超限返回 errorCode `421`（"api queue limit reached"），多集按 ≤3 并发批次提交
-- **instanceType 必须用 `plus`（48G 显存）**：default（24G）跑 Ref2VA 1344×768×362 帧必在 SamplerCustomAdvanced 处 `torch.OutOfMemoryError`（2026-09 实测）
-- 费用与耗时参考（plus，2026-09 实测）：15s/集约 160 RH 币、400 秒左右
+- **instanceType 按时长选择（t8balance/Ref2VA/mp0.86，2026-09-18 实测）**：default（24G）必 OOM；**plus（48G）只能稳定跑 ≤10s**——13s 与 15s 即使串行独占也在 node 19 SamplerCustomAdvanced 处 `torch.OutOfMemoryError`（errorCode 805，零扣费；容量临界在 10s 与 13s 之间）；**≥13s 直接用 `ultra`（84G）**，不必先试 plus（805 零扣费但每轮浪费约 6–17 分钟轮询）
+- 费用与耗时参考（2026-09 实测）：t8lite plus 15s/集约 160 RH 币、400 秒左右；t8balance 9:16/mp0.86/单参考图：**plus 10s 213—240 币、485—599 秒**（E02/E04/E05/E06/E07 实测区间）；**ultra 13s=510 币/850s、15s=604 币/1006s**（E09/E08 实测首跑，约为 plus 10s 单价的 2.1—2.5 倍）；其他时长/机型组合仍须首跑后回填，勿线性臆造
 
 ### instanceType 选择
 
 | 类型 | 显存 | 适用 |
 |---|---|---|
 | `default` | 24G | 简单任务，Ref2VA 多图必 OOM |
-| `plus` | 48G | **Ref2VA 必须用此** |
-| `ultra` | 84G | 最大容量、最高成本 |
+| `plus` | 48G | **Ref2VA 10s 及以内必须用此**；mp0.86 下 13s/15s 必 OOM（805 零扣费，2026-09-18 实测） |
+| `ultra` | 84G | **mp0.86 ≥13s（15s 等）用此**；成本约 plus 10s 的 2.1—2.5 倍 |
 
 ### HTTP 客户端可靠性（防重复扣费）
 

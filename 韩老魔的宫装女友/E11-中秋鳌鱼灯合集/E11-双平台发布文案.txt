@@ -1,0 +1,64 @@
+# E11 · 中秋鳌鱼灯 —— 双平台发布文案包
+
+**成片**：`E11-中秋鳌鱼灯合集\video\E11.mp4`（4 段合并 + 统一 BGM，约 40.5s，1056×1920 竖屏）
+**封面**：`E11-中秋鳌鱼灯合集\images\E11D_墨彩环_灯下许愿.png`（Step 4 参考图 PNG 直传，双平台同一张）
+**角色**：李缨宁（红色宫装）· 墨彩环（宫装）
+**热点**：抖音热搜「这个中秋打卡安徽鳌鱼灯」1029.6 万 · 「提前开练中秋送礼物动作」775.8 万 · 「中秋许愿」773.1 万
+
+---
+
+## 一、B 站（账号：bilibili_main／韩老魔的宫装女友）
+
+- **分区**：`--tid 47`（动画·短片/同人）
+- **版权**：自制 + 禁止转载
+- **创作声明**：**含AI生成内容**（投稿后**必须**用 `/x/vu/web/edit` 补设 `creation_statement.id=1`，再用 `/x/vupre/web/archive/view` 回读校验）
+- **标题**（62 字，≤80）：
+  `中秋前夜，两位师姐一个要鱼灯、一个要人｜韩老魔的宫装女友11`
+- **简介**：
+  `徽州鱼灯上了热搜——青竹做骨、绵纸做衣，最大的那条要二十个人才抬得动。大师姐刷到就坐不住了，二师姐当场吃醋：热搜还在教"中秋送礼物要提前开练"呢。最后两个人都许了愿，一个要鱼灯，一个要人。`
+  `（含AI生成内容 ｜ 角色二创自《凡人修仙传》，非商用同人）`
+- **标签（12 个）**：
+  `中秋节,鳌鱼灯,非遗鱼灯,韩老魔的宫装女友,凡人修仙传,李缨宁,墨彩环,宫装女友,国风,AI短剧,AI视频,甜宠`
+- **封面**：`E11-中秋鳌鱼灯合集\images\E11D_墨彩环_灯下许愿.png`（biliup `--cover` 直接接受 .png）
+
+投稿命令（bldsa 线路证书过期，须走 biliup 直连）：
+
+```powershell
+& "$env:USERPROFILE\.social-auto-upload\tools\biliup\windows-x86_64\biliup.exe" `
+  -u "D:\work\social-auto-upload\cookies\bilibili_main.json" upload `
+  "d:\work\minimax_h3\韩老魔的宫装女友\E11-中秋鳌鱼灯合集\video\E11.mp4" `
+  --line bda2 --tid 47 --copyright 1 --no-reprint 1 `
+  --title "中秋前夜，两位师姐一个要鱼灯、一个要人｜韩老魔的宫装女友11" `
+  --desc "<上方简介>" `
+  --tag "中秋节,鳌鱼灯,非遗鱼灯,韩老魔的宫装女友,凡人修仙传,李缨宁,墨彩环,宫装女友,国风,AI短剧,AI视频,甜宠" `
+  --cover "d:\work\minimax_h3\韩老魔的宫装女友\E11-中秋鳌鱼灯合集\images\E11D_墨彩环_灯下许愿.png"
+```
+
+---
+
+## 二、抖音（账号：creator）
+
+- **标题**（≤30 字）：
+  `中秋前夜，两位师姐抢着许愿`
+- **简介**：
+  `热搜说这个中秋都去安徽打卡鳌鱼灯，大师姐坐不住了。二师姐：热搜还在教中秋送礼物得提前开练呢……`
+- **话题（硬上限 5 个，多一个必乱码）**：
+  `#中秋鳌鱼灯 #韩老魔的宫装女友 #凡人修仙传 #AI短剧 #李缨宁`
+- **封面**：同上（sau `--thumbnail` 直接接受 .png）
+- **AI 自主声明**：`--declaration "内容由AI生成"`
+
+发布命令：
+
+```powershell
+& 'D:\work\social-auto-upload\.venv\Scripts\sau.exe' douyin upload-video `
+  --account creator `
+  --file "d:\work\minimax_h3\韩老魔的宫装女友\E11-中秋鳌鱼灯合集\video\E11.mp4" `
+  --headless `
+  --title "中秋前夜，两位师姐抢着许愿" `
+  --desc "热搜说这个中秋都去安徽打卡鳌鱼灯，大师姐坐不住了。二师姐：热搜还在教中秋送礼物得提前开练呢……" `
+  --tags "#中秋鳌鱼灯,#韩老魔的宫装女友,#凡人修仙传,#AI短剧,#李缨宁" `
+  --thumbnail "d:\work\minimax_h3\韩老魔的宫装女友\E11-中秋鳌鱼灯合集\images\E11D_墨彩环_灯下许愿.png" `
+  --declaration "内容由AI生成"
+```
+
+> **短信风控门**：日志出现「📱 检测到短信验证码弹窗」后必须**硬暂停**等待用户提供 6 位验证码，拿码后**无 BOM** 写入 `D:\work\social-auto-upload\verify_code.txt`（用 `[System.IO.File]::WriteAllText`），再恢复流程。
