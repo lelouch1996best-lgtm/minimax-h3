@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-publish_episode.py — 宫装女友双平台发布固化脚本（B站 + 抖音）
+publish_episode.py — 双平台发布固化脚本（B站 + 抖音）· 多项目通用
 
 把「B站投稿（含创作声明一次带入）-> B站回读核验 -> 抖音投稿 -> 抖音回读核验
 -> 生成台账块」固化为一条命令，仅依赖 Python 标准库。
+
+**多项目通用**（2026-09-19 起）：`--project` 选择项目（默认 palace）。各项目的目录名、
+子目录名、成片/封面命名、账号差异全部收敛在下面的 `PROJECTS` 配置里，脚本主体不再写死
+任何单一系列的字面量——新系列只需在 `PROJECTS` 里加一条。
+
+| project | 项目目录 | 集号 | 参考图目录 | 发布版成片 | 抖音账号 |
+|---|---|---|---|---|---|
+| `palace` | 韩老魔的宫装女友 | `E{NN}` | `images\\` | `E{NN}.mp4` | creator |
+| `dance` | 韩老魔的歌舞团 | `D{NN}` | `images\\`（**项目级**，2026-09-20 起） | `D{NN}.mp4` | douyin_dance |
 
 设计依据（2026-09-19 实测，详见 SKILL 7.1/7.2）：
   * B站创作声明必须用 `--submit web --extra-fields '{"creation_statement":{"id":1}}'`
@@ -16,19 +25,22 @@ publish_episode.py — 宫装女友双平台发布固化脚本（B站 + 抖音�
   # 1) 双平台发布（自动读分集目录里的《E{NN}-双平台发布文案.txt》）
   python publish_episode.py --episode E09
 
-  # 2) 只看将要执行的命令，不真正发布
+  # 2) dance 系列（D{NN} 集号 + 参考图\\ 目录 + douyin_dance 账号）
+  python publish_episode.py --project dance --episode D01
+
+  # 3) 只看将要执行的命令，不真正发布
   python publish_episode.py --episode E09 --dry-run
 
-  # 3) 只发 B站
+  # 4) 只发 B站
   python publish_episode.py --episode E09 --platform bilibili
 
-  # 4) 已知短信验证码，直接带上（避免等待）
+  # 5) 已知短信验证码，直接带上（避免等待）
   python publish_episode.py --episode E10 --platform douyin --dy-code 123456
 
-  # 5) 只回读核验已发布稿件（不发布）
+  # 6) 只回读核验已发布稿件（不发布）
   python publish_episode.py --episode E09 --verify-only
 
-  # 6) 清理误投/测试稿件
+  # 7) 清理误投/测试稿件
   python publish_episode.py --delete-bili aid=117296378943400
 """
 
@@ -47,17 +59,54 @@ from pathlib import Path
 # ---------------------------------------------------------------- 配置
 
 PROJECT_ROOT = Path(r"d:\work\minimax_h3")
-SERIES_DIR = PROJECT_ROOT / "韩老魔的宫装女友"
 SAU_EXE = Path(r"D:\work\social-auto-upload\.venv\Scripts\sau.exe")
 COOKIE_DIR = Path(r"D:\work\social-auto-upload\cookies")
 VERIFY_CODE_FILE = Path(r"D:\work\social-auto-upload\verify_code.txt")
 
-BILI_ACCOUNT = "bilibili_main"
-DY_ACCOUNT = "creator"
-DY_COOKIE = COOKIE_DIR / "douyin_creator.json"
 TID = "47"                      # 动画·短片/同人
 BILI_LINE = "bda2"              # bldsa 线路证书过期，固定走 bda2
 AI_DECLARATION = "内容由AI生成"
+
+# 项目配置：新系列只加一条，脚本主体不写死系列字面量
+PROJECTS = {
+    "palace": {
+        "cn": "宫装女友（韩老魔的宫装女友）",
+        "dir": "韩老魔的宫装女友",
+        "image_dir": "images",          # 参考图（兼封面）目录
+        "video_dir": "video",
+        "record_dir": "任务记录",
+        # 成片优先级（数字小者优先）：5B 混音发布版 E{NN}.mp4 > 原始成片 > 合集 > 无BGM素材
+        "video_prefer": ["{ep}.mp4"],
+        "video_prefix": "宫装女友{ep}_",
+        "cover_exclude": "场景",         # 4.5 场景图 `..._场景.png` 不作封面
+        "bili_account": "bilibili_main",
+        "dy_account": "creator",
+        "dy_cookie": "douyin_creator.json",
+    },
+    "dance": {
+        "cn": "韩老魔的歌舞团（舞蹈复刻）",
+        "dir": "韩老魔的歌舞团",
+        # 2026-09-20 用户指定：dance 全部生成图落**项目级** images\（跨任务复用），不再用分集 参考图\
+        "image_dir": "images",
+        "image_dir_at_root": True,
+        "video_dir": "video",
+        "record_dir": "任务记录",
+        # D{NN}.mp4 = Step 5 混音发布版；D{NN}_舞蹈迁移.mp4 = 迁移成片（自带源舞原声）
+        "video_prefer": ["{ep}.mp4"],
+        "video_prefix": "{ep}_舞蹈迁移",
+        "cover_exclude": "",
+        "bili_account": "bilibili_main",
+        "dy_account": "douyin_dance",
+        "dy_cookie": "douyin_douyin_dance.json",   # sau 命名规则＝douyin_{account}.json（2026-09-20 D02 实测校正）
+    },
+}
+
+CFG = PROJECTS["palace"]        # main() 里按 --project 覆盖
+
+
+def series_dir():
+    return PROJECT_ROOT / CFG["dir"]
+
 
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -110,29 +159,37 @@ def resolve_episode(episode=None, directory=None):
         if not d.is_dir():
             raise SystemExit(f"[X] 目录不存在：{d}")
         return d
-    hits = sorted(p for p in SERIES_DIR.glob(f"{episode}-*") if p.is_dir())
+    sd = series_dir()
+    hits = sorted(p for p in sd.glob(f"{episode}-*") if p.is_dir())
     if not hits:
-        raise SystemExit(f"[X] 未找到分集目录 {episode}-* （在 {SERIES_DIR}）")
+        raise SystemExit(f"[X] 未找到分集目录 {episode}-* （在 {sd}）")
     if len(hits) > 1:
         log(f"[!] 匹配到多个目录，取第一个：{[h.name for h in hits]}")
     return hits[0]
 
 
 def resolve_video(ep_dir, episode):
-    """优先 5B 混音发布版 E{NN}.mp4 -> 原始成片 -> 合集命名 -> 兜底任意 mp4"""
-    vdir = ep_dir / "video"
+    """选成片，2026-09-20 起按 BGM 规矩收窄后的口径：
+
+    单片集 → **原生成片**（`宫装女友E{NN}_时间戳.mp4`）优先，混音版不再参与；
+    拆片集/多段合集 → 该目录内只有拼接件与混音版，取混音发布版 `E{NN}.mp4`。
+    """
+    vdir = ep_dir / CFG["video_dir"]
     if not vdir.is_dir():
         raise SystemExit(f"[X] 无 video 目录：{vdir}")
     mp4s = [p for p in vdir.glob("*.mp4")]
     if not mp4s:
         raise SystemExit(f"[X] video 目录下没有 mp4：{vdir}")
 
+    prefer = [t.format(ep=episode) for t in CFG["video_prefer"]]
+    prefix = CFG["video_prefix"].format(ep=episode)
+
     def rank(p):
         n = p.name
-        if n == f"{episode}.mp4":
-            return 0                                  # 混音发布版
-        if n.startswith(f"宫装女友{episode}_"):
-            return 1                                  # 原始成片
+        if n.startswith(prefix):
+            return 0                                  # 原始成片（单片集发布件，优先）
+        if n in prefer:
+            return 1                                  # 混音发布版（拆片集/多段合集的合集目录内）
         if "合集" in n and "NM" not in n:
             return 2
         if "NM" in n:
@@ -143,18 +200,81 @@ def resolve_video(ep_dir, episode):
     return mp4s[0]
 
 
-def resolve_cover(ep_dir, episode):
-    imgs = [p for p in (ep_dir / "images").glob(f"{episode}*.png")]
+def resolve_cover(ep_dir, episode, prefer=""):
+    """封面解析：优先用文案包「封面」行指定的图（2026-09-20 起），否则按文件名取第一张。
+
+    prefer：文案包头部「封面」行里的路径（绝对路径或相对项目根/分集根），空则忽略。
+    """
+    if prefer:
+        cand = Path(prefer)
+        tries = [cand] if cand.is_absolute() else [series_dir() / cand, ep_dir / cand]
+        for c in tries:
+            if c.is_file():
+                return c
+        log(f"[!] 文案包指定的封面不存在（{prefer}），改用自动选取")
+    idir = ep_dir / CFG["image_dir"]
+    if CFG.get("image_dir_at_root") or not idir.is_dir():
+        # dance：生成图统一落项目级 images\（跨任务复用）；palace 维持分集目录
+        idir = series_dir() / CFG["image_dir"]
+    imgs = [p for p in idir.glob(f"{episode}*.png")]
     if not imgs:
-        imgs = [p for p in (ep_dir / "images").glob("*.png")]
-    imgs = [p for p in imgs if "场景" not in p.name]
+        imgs = [p for p in idir.glob("*.png")]
+    ex = CFG.get("cover_exclude") or ""
+    if ex:
+        imgs = [p for p in imgs if ex not in p.name]
     if not imgs:
-        raise SystemExit(f"[X] 未找到封面参考图：{ep_dir / 'images'}")
+        raise SystemExit(f"[X] 未找到封面参考图：{idir}")
     imgs.sort(key=lambda p: p.name)
     return imgs[0]
 
 
 # ---------------------------------------------------------------- 文案包解析
+
+DOUYIN_TOPIC_LIMIT = 5                 # 抖音话题硬上限（多传必乱码，见 SKILL 7.3）
+
+
+def _clean_topics(seq):
+    out, seen = [], set()
+    for t in seq:
+        t = re.sub(r"\s+", "", str(t)).strip("`*·、,，#＃|｜\"'“”")
+        if t and t not in seen:
+            seen.add(t)
+            out.append(t)
+    return out
+
+
+def parse_topics(dy_block, full_text):
+    """解析抖音话题，返回 (topics, warnings)。
+
+    规范格式＝编号列表 `1. #话题名`（SKILL 7.3，2026-09-19 起）；兼容单行 `#a #b #c` 与逗号串。
+    并校验话题中是否含文案包头部「热点」行的热搜标题原文（用户 2026-09-19 指定：热搜标题原样做话题）。
+    """
+    warn = []
+    m = re.search(r"^-\s*\**\s*话题[^：:]*[：:]\s*(.+?)(?=^-\s|\Z)", dy_block, re.S | re.M)
+    raw = m.group(1).strip() if m else ""
+
+    nums = re.findall(r"^\s*\d+[.、]\s*#?\s*(.+?)\s*$", raw, re.M)
+    if nums:
+        topics = _clean_topics(nums)
+    else:
+        body = re.sub(r"[（(][^）)]*[)）]", " ", raw or dy_block)   # 去掉「（硬上限 5 个）」这类注记
+        topics = _clean_topics(re.findall(r"#([^#\s,，、|｜]+)", body))
+        if not topics:
+            topics = _clean_topics(re.split(r"[,，、\s]+", body))
+
+    if len(topics) > DOUYIN_TOPIC_LIMIT:
+        warn.append(f"话题 {len(topics)} 个超硬上限 {DOUYIN_TOPIC_LIMIT}，仅取前 {DOUYIN_TOPIC_LIMIT} 个："
+                    + " ".join("#" + t for t in topics[:DOUYIN_TOPIC_LIMIT]))
+        topics = topics[:DOUYIN_TOPIC_LIMIT]
+    if not topics:
+        warn.append("未解析到话题：抖音块请写成编号列表 `1. #话题名`（见 SKILL 7.3）；本次将不带话题发布")
+
+    head = re.split(r"^##\s", full_text, flags=re.M)[0]
+    hot = _clean_topics(re.findall(r"[「『](.+?)[」』]", head))
+    if hot and topics and not any(t in hot for t in topics):
+        warn.append(f"话题里没有热搜标题原文（如「{hot[0]}」）：按 SKILL 7.3，第 1 个话题应为热搜标题原样")
+    return topics, warn
+
 
 def parse_copy_file(ep_dir, episode):
     """解析《E{NN}-双平台发布文案.txt》；缺失则返回 {}"""
@@ -165,24 +285,38 @@ def parse_copy_file(ep_dir, episode):
     text = path.read_text(encoding="utf-8", errors="replace")
 
     def block(name):
-        m = re.search(rf"^##\s*{name}.*?$(.*?)(?=^##\s|\Z)", text, re.S | re.M)
+        # 标题行可带前缀/后缀（如「## 一、B 站（账号：xxx）」「## 二、抖音」），只要含关键字即可
+        m = re.search(rf"^##[^\n]*{name}[^\n]*$(.*?)(?=^##[^\n]*$|\Z)", text, re.S | re.M)
         return m.group(1) if m else ""
 
     def field(body, label):
-        m = re.search(rf"^-\s*{label}[^：:]*[：:]\s*(.+?)(?=^-\s|\Z)", body, re.S | re.M)
+        # 兼容 `- 标题（≤30 字）：` 与 `- **标题**（≤30 字）：` 两种写法
+        m = re.search(rf"^-\s*\**\s*{label}[^：:]*[：:]\s*(.+?)(?=^-\s|\Z)", body, re.S | re.M)
         return m.group(1).strip() if m else ""
+
+    def dewrap(s):
+        """去掉 markdown 反引号与多余空白（文案包常把值写成 `...`，多行简介每行都带反引号）"""
+        return re.sub(r"\s+", " ", str(s).replace("`", " ")).strip()
 
     def multi(body, label):
         """简介可能多行，压成一行"""
-        v = field(body, label)
-        return re.sub(r"\s+", " ", v).strip()
+        return dewrap(field(body, label))
 
     dy, bili = block(r"抖音"), block(r"B\s*站")
-    topics = re.findall(r"^\s*\d+\.\s*#(.+?)\s*$", dy, re.M)
+    topics, topic_warn = parse_topics(dy, text)
+    for w in topic_warn:
+        log(f"[!] 抖音话题：{w}")
     tags_raw = field(bili, r"标签")
-    tags = [t.strip() for t in re.split(r"[,，]", tags_raw) if t.strip()]
+    tags = [t for t in (dewrap(x) for x in re.split(r"[,，]", tags_raw)) if t]
+
+    # 头部「封面」行：支持 `路径` 包裹或裸路径（.png/.jpg），供 resolve_cover 优先使用
+    head = re.split(r"^##\s", text, flags=re.M)[0]
+    cm = (re.search(r"封面[^\n]*?`([^`]+?\.(?:png|jpg|jpeg))`", head, re.I)
+          or re.search(r"封面[^\n]*?([^\s`（(]+\.(?:png|jpg|jpeg))", head, re.I))
+    cover_pref = cm.group(1).strip() if cm else ""
 
     out = {
+        "cover": cover_pref,
         "douyin": {
             "title": multi(dy, r"标题"),
             "desc": multi(dy, r"简介"),
@@ -222,18 +356,18 @@ def bili_upload(video, cover, title, desc, tags, dry_run=False):
     """投稿（--submit web 一次带入创作声明）；具体实现在全局 bili_publish.py"""
     log("\n=== B 站投稿（web 接口，创作声明一次带入） ===")
     res = bili.upload(str(video), title, desc, tags, cover=str(cover),
-                      tid=TID, account=BILI_ACCOUNT, line=BILI_LINE, dry_run=dry_run)
+                      tid=TID, account=CFG["bili_account"], line=BILI_LINE, dry_run=dry_run)
     if not dry_run and res.get("submit_interface") == "app":
         res["warn"] = "走成了 APP 接口，创作声明不会一次带入！"
     return res
 
 
 def bili_verify(aid):
-    return bili.verify(aid, account=BILI_ACCOUNT)
+    return bili.verify(aid, account=CFG["bili_account"])
 
 
 def bili_delete(aid):
-    return bili.delete(aid, account=BILI_ACCOUNT)
+    return bili.delete(aid, account=CFG["bili_account"])
 
 
 # ---------------------------------------------------------------- 抖音
@@ -242,7 +376,7 @@ def douyin_upload(video, cover, title, desc, topics, dy_code=None, dry_run=False
                   code_timeout=900):
     cmd = [
         str(SAU_EXE), "douyin", "upload-video",
-        "--account", DY_ACCOUNT,
+        "--account", CFG["dy_account"],
         "--file", str(video),
         "--headless",
         "--title", title[:30],
@@ -293,7 +427,7 @@ def douyin_upload(video, cover, title, desc, topics, dy_code=None, dry_run=False
 
 
 def douyin_verify(limit=6):
-    cookie, raw = load_cookies(DY_COOKIE)
+    cookie, raw = load_cookies(COOKIE_DIR / CFG["dy_cookie"])
     hdr = {"User-Agent": UA, "Cookie": cookie,
            "Referer": "https://creator.douyin.com/creator-micro/content/manage"}
     params = {"aid": "2906", "count": str(limit), "cursor": "0", "type": "1",
@@ -321,13 +455,13 @@ def douyin_verify(limit=6):
 def build_markdown(episode, bili_res, bili_ver, dy_res, dy_items, copy_path,
                    video, cover, ep_dir):
     now = time.strftime("%Y-%m-%d %H:%M")
-    rel = lambda p: str(Path(p).relative_to(SERIES_DIR)).replace("\\", "/")  # noqa: E731
+    rel = lambda p: str(Path(p).relative_to(series_dir())).replace("\\", "/")  # noqa: E731
     lines = [f"- **发布状态（{now} 双平台已发布）**："]
     if bili_res and not bili_res.get("dry_run"):
         bvid = bili_res.get("bvid", "?")
         aid = bili_res.get("aid", "?")
         lines.append(
-            f"- **B站投稿**：账号 {BILI_ACCOUNT}，bvid **{bvid}**，aid {aid}，"
+            f"- **B站投稿**：账号 {CFG['bili_account']!r}，bvid **{bvid}**，aid {aid}，"
             f"https://www.bilibili.com/video/{bvid} ；state {bili_ver.get('state')}"
             f"（{bili_ver.get('state_desc')}），创作声明 **id={bili_ver.get('decl_id')}"
             f"（{bili_ver.get('decl_text')}）**；分区 tid {bili_ver.get('tid')}，"
@@ -335,7 +469,7 @@ def build_markdown(episode, bili_res, bili_ver, dy_res, dy_items, copy_path,
     if dy_res and not dy_res.get("dry_run") and dy_items:
         d = dy_items[0]
         lines.append(
-            f"- **抖音投稿**：账号 {DY_ACCOUNT}，aweme_id **{d['aweme_id']}**，{d['url']} ；"
+            f"- **抖音投稿**：账号 {CFG['dy_account']!r}，aweme_id **{d['aweme_id']}**，{d['url']} ；"
             f"公开={d['public']}，话题 {len(d['topics'])} 个「{' '.join('#' + t for t in d['topics'])}」"
             f"，封面同上，自主声明「{AI_DECLARATION}」随发布表单一次选定"
             + ("；**触发短信验证码门**" if (dy_res or {}).get("gate_seen") else "；未触发短信风控门"))
@@ -348,8 +482,11 @@ def build_markdown(episode, bili_res, bili_ver, dy_res, dy_items, copy_path,
 # ---------------------------------------------------------------- main
 
 def main():
-    ap = argparse.ArgumentParser(description="宫装女友双平台发布固化脚本")
-    ap.add_argument("--episode", help="集号，如 E09")
+    global CFG
+    ap = argparse.ArgumentParser(description="双平台发布固化脚本（B站 + 抖音）· 多项目通用")
+    ap.add_argument("--project", default="palace", choices=sorted(PROJECTS),
+                    help="项目：palace 宫装女友（默认）/ dance 歌舞团；决定项目目录、子目录名与账号")
+    ap.add_argument("--episode", help="集号，如 E09（palace）/ D01（dance）")
     ap.add_argument("--dir", help="直接指定分集目录（覆盖 --episode 定位）")
     ap.add_argument("--platform", default="both", choices=["both", "bilibili", "douyin"])
     ap.add_argument("--dry-run", action="store_true", help="只打印将要执行的命令")
@@ -359,6 +496,9 @@ def main():
     ap.add_argument("--code-timeout", type=int, default=900, help="等待验证码秒数，默认 900")
     ap.add_argument("--delete-bili", metavar="AID=<id>", help="删除指定 B站稿件（不可逆）")
     args = ap.parse_args()
+
+    CFG = PROJECTS[args.project]
+    log(f"项目：{CFG['cn']}（{CFG['dir']}）")
 
     if args.delete_bili:
         aid = int(re.sub(r"^\D*", "", args.delete_bili))
@@ -388,9 +528,10 @@ def main():
     else:
         log("[!] 未找到发布文案包，将要求命令行提供标题/简介（本脚本不含创作文案）")
 
-    video, cover = resolve_video(ep_dir, episode), resolve_cover(ep_dir, episode)
+    video = resolve_video(ep_dir, episode)
+    cover = resolve_cover(ep_dir, episode, copy_data.get("cover", ""))
     log(f"成片：{video.name}（{video.stat().st_size:,} 字节）")
-    log(f"封面：{cover.name}")
+    log(f"封面：{cover.name}" + ("（文案包指定）" if copy_data.get("cover") else "（自动选取）"))
 
     by, bl = copy_data.get("douyin", {}), copy_data.get("bilibili", {})
     if not bl.get("title"):
@@ -437,7 +578,7 @@ def main():
         "bilibili": {"upload": bili_res, "verify": bili_ver},
         "douyin": {"upload": dy_res, "recent": dy_items[:2]},
     }
-    rec = ep_dir / "任务记录"
+    rec = ep_dir / CFG["record_dir"]
     rec.mkdir(exist_ok=True)
     (rec / "publish_result.json").write_text(
         json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")

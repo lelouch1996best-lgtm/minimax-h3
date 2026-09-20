@@ -36,11 +36,12 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-BASE_URL = "https://api.apimart.ai/v1"
+BASE_URL = os.environ.get("APIMART_BASE_URL", "https://api.apib.ai/v1").rstrip("/")
 TERMINAL_STATUSES = {"completed", "failed"}
 # 提交后任务可能短暂查不到（实测现象），在此宽限期内 404 视为暂时现象
 NOT_FOUND_GRACE_SECONDS = 60
-# 本机常见代理端口（Clash 等），api.apimart.ai 在国内网络可能需要代理
+# 本机常见代理端口（Clash 等）。默认 base url 为国内可直连的 https://api.apib.ai/v1，
+# 故仅在探测到本地代理端口时才走代理；如需强制直连可设 APIMART_NO_PROXY=1。
 LOCAL_PROXY_CANDIDATES = ["http://127.0.0.1:7890"]
 
 
@@ -72,7 +73,9 @@ def _proxy_alive(proxy_url):
 
 
 def _build_opener():
-    """优先尊重标准代理环境变量；未设置时自动探测本地 Clash 端口；否则直连。"""
+    """默认直连（api.apib.ai 国内可访问）；设置了 *_PROXY 或探测到本地代理时才走代理。"""
+    if os.environ.get("APIMART_NO_PROXY") == "1":
+        return urllib.request.build_opener(urllib.request.ProxyHandler({}))
     if os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY"):
         return urllib.request.build_opener()  # urlopen 默认读取 *_PROXY
     for proxy in LOCAL_PROXY_CANDIDATES:

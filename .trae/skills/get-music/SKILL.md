@@ -26,7 +26,7 @@ Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 ```
 
-基础 URL：`https://api.apimart.ai/v1`
+基础 URL：`https://api.apib.ai/v1`（**国内可直连**，2026-09-19 起由 `api.apimart.ai` 切换；可用环境变量 `APIMART_BASE_URL` 覆盖）
 
 ## 执行方式：优先使用固化脚本
 
@@ -55,7 +55,7 @@ python tools/new_music.py --title test --prompt "piano, instrumental" --dry-run
 - 任务刚提交的约 60 秒内返回 404 / `Invalid task ID` 会自动等待重试；429/5xx 自动退避重试；`failed` 读取 `error.message`；`unknown` 继续等待，超时后提示手动 `--query`，绝不超时重发 POST。
 - 完成后自动下载全部音轨与封面到 `--out`，并写一份 `<标题>.result.json` 原始响应；`--no-download` 只回显元数据。
 - `--trim N` 用完整版 ffmpeg（自动取 `imageio_ffmpeg` 自带 ffmpeg；系统 PATH 里的精简版缺 aac 编码器会被跳过）截取前 N 秒并淡入淡出，同时产出 m4a + wav，`--no-wav` 可关。
-- 网络：脚本优先尊重 `HTTPS_PROXY`/`HTTP_PROXY`，否则自动探测本地 `127.0.0.1:7890` 代理，再不行才直连。实测 `api.apimart.ai` 在本机直连会被 DNS 污染（解析到 31.13.85.53 等不可达 IP），需先开启 Clash 类代理；音频域名 `getapib.org` 可直连。
+- 网络：默认基础域名 `api.apib.ai` **国内可直连，无需代理**；脚本仅在设置了 `HTTPS_PROXY`/`HTTP_PROXY` 或探测到本地 `127.0.0.1:7890` 这类代理端口时才走代理，设 `APIMART_NO_PROXY=1` 可强制直连。（历史坑：旧域名 `api.apimart.ai` 在本机直连会被 DNS 污染，解析到 31.13.85.53 等不可达 IP，必须开 Clash 类代理——换域名后此坑已解；音频下载域名 `getapib.org` 一直可直连。）
 
 ## 模型选择
 
@@ -126,7 +126,7 @@ python tools/new_music.py --title test --prompt "piano, instrumental" --dry-run
 
 ### 第一步：提交生成任务
 
-`POST https://api.apimart.ai/v1/music/generations`
+`POST https://api.apib.ai/v1/music/generations`
 
 提交成功响应（200）：
 
@@ -143,7 +143,7 @@ python tools/new_music.py --title test --prompt "piano, instrumental" --dry-run
 
 ### 第二步：查询任务结果
 
-`GET https://api.apimart.ai/v1/music/tasks/{task_id}`
+`GET https://api.apib.ai/v1/music/tasks/{task_id}`
 
 路径参数：`task_id`（必填，提交接口返回的 `data[0].task_id`）。
 

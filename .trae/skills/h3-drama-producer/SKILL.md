@@ -169,7 +169,7 @@ Step 3 检索不到的角色/场景/道具，用 **65535 API** 生成。**生成
 生成提示词要领：
 
 - **角色补全**：以最接近的现有造型三视图为参考图，**锁定脸部/发型/身份锚点，仅修改服装**；提示词明确"保持面部、发型、瞳色与参考图完全一致"
-- **场景**：文生图空镜，不含人物，氛围特征与剧本描述一致；**必须显式锁定与角色三视图相同的渲染画风**（如三视图为 3D 动画 CG，提示词写明 "3D Chinese donghua CG animation style, stylized rendered look, matching a 3D animated film, NOT live-action / photorealistic / real photo"），从源头避免场景与角色画风冲突。生成后用 Read 与三视图并排核验画风，不一致即调词重生成
+- **场景**：文生图空镜，不含人物，氛围特征与剧本描述一致；**必须显式锁定与角色三视图相同的渲染画风**（如三视图为 3D 动画 CG，提示词写明 "3D Chinese donghua CG animation style, stylized rendered look, matching a 3D animated film, NOT live-action / photorealistic / real photo"），从源头避免场景与角色画风冲突。生成后用 Read 与三视图并排核验画风，不一致即调词重生成。**特例**：目标画风为**真人写实**时（如 `palace-girlfriend-trending` / `dance` 两个系列），画质段直接照抄 `assets\真人质感美术基准.md` §6.2 真人质感段 + §5 反向约束，不要另写一套
 - **道具**：文生图特写，特征与剧本关键道具描述一致；画风同样须与成片目标画风一致
 
 ### 4.2 生成与归档
@@ -302,6 +302,17 @@ python "...\run_workflow_api.py" --run <WORKFLOW_ID> `
 | 6A 应用 API | `POST /openapi/v2/media/upload/binary`（form-data `file=@路径`，Bearer 认证） | `openapi/<hash>.png` | nodeInfoList 的 image 字段 |
 | 6B / 6C | `runninghub_app.upload_file()`（`POST /task/openapi/upload`） | `api/xxx.png` | LoadImage 节点 `widgets_values[0]` |
 
+6A 上传代码（nodeInfoList 用 `openapi/` 短路径）：
+
+```python
+import sys
+sys.path.insert(0, r'd:\work\minimax_h3\.trae\skills\runninghub\scripts')
+from runninghub import require_api_key, upload_file   # 注意：来自 runninghub，不是 runninghub_app
+key = require_api_key(None)
+short = upload_file(key, r'<本地图片绝对路径>')   # 返回 https://.../input/openapi/<hash>.png
+# 从返回 URL 提取 openapi/<hash>.png 填入 nodeInfoList 的 image 字段
+```
+
 6B/6C 上传代码：
 
 ```python
@@ -313,11 +324,13 @@ key = require_api_key(None)
 name = upload_file(key, r'<本地图片绝对路径>')   # 返回 api/xxx.png
 ```
 
+**勿混用两个模块（2026-09-19 E11 实测踩坑）**：`runninghub.upload_file`（6A，走 `/openapi/v2/media/upload/binary`，返回 `openapi/<hash>.png`）与 `runninghub_app.upload_file`（6B/6C，走 `/task/openapi/upload`，返回 `api/xxx.png`）是**两套不同接口**——6A 任务若误 import `runninghub_app` 拿到 `api/` 路径填进 nodeInfoList，会在 LoadImage 报「No such file or directory」。宫装女友系列（t8balance）属 6A，一律用 `runninghub.upload_file`。
+
 - 先 `python <runninghub脚本> --check` 确认 API Key 有效
 - 两套接口均**内容寻址**：同一文件返回相同 hash 文件名，隔天重传文件名不变；跨集复用角色无需重传，路径映射缓存在 `任务记录\上传结果.json`
 - **上传链接仅一天有效**：正式出片前如隔天需重新上传（文件名不变，nodeInfoList/工作流无需改）
 - 上传不产生费用
-- **上传后勿立即提交任务**：openapi/api 短路径写入工作区有同步延迟（分钟级），上传后秒提交会在 LoadImage 节点报「No such file or directory」**零扣费失败**（2026-09-18 E05 实测 node 6）；上传与提交之间留 2—5 分钟，失败后隔几分钟重提同一 payload 即可，不算 payload 错误
+- **上传后勿立即提交任务**：openapi/api 短路径写入工作区有分钟级同步延迟，上传后秒提交会在 LoadImage 节点报「No such file or directory」**零扣费失败**（2026-09-18 E05 实测 node 6）；上传与提交之间留 2—5 分钟，失败后隔几分钟重提同一 payload 即可，不算 payload 错误。**规则正本见 `runninghub` 技能 SKILL.md「长任务执行规范」§4**（含内容寻址与链接有效期的完整口径）
 
 ## Step 8 — 构建 payload 并校验
 
@@ -381,22 +394,9 @@ payload 摘要：E01-E03，每集提示词开头 100 字
 
 ### HTTP 客户端可靠性（防重复扣费）
 
-**超时不等于未送达**：POST 提交时如挂起或超时，请求体可能已完整到达服务端——服务端已创建任务并开始生成，但客户端未收到含 `taskId` 的响应。此时重试会创建重复任务，**每次重复都消耗 RH 币**，且无"列出我的任务"API 可查孤立任务。
+**规则正本见 `runninghub` 技能 SKILL.md「长任务执行规范」§2 + §3**：核心是「超时不等于未送达」——POST 挂起/超时时请求体可能已到达服务端并已创建任务，重试即重复扣费；因此**提交一律用 `curl.exe --max-time`**（禁 `requests` / `urllib` 裸提交）、**挂起后绝不立即重试**（至少等 2—3 分钟再对账）、**已拿到 taskId 的一律走续接不重提**。本节只保留本技能方式下的具体命令与兜底写法，不重复规则正文。
 
-提交安全规则：
-
-1. **挂起/超时后绝不立即重试**——任务可能已在运行
-2. **必须用 `curl.exe --max-time`** 提交，禁止用 Python `requests` 或 `urllib`（均会无限挂起）
-3. **如发生挂起，等待至少 2-3 分钟**再考虑重试
-4. **记录每次提交尝试**的时间戳，便于与服务端任务对账
-5. **可使用 `webhookUrl`** 接收异步完成通知
-6. **多次尝试后，检查 RunningHub 控制台**是否有孤立任务
-
-| 问题 | `requests` | `urllib` | `curl.exe` |
-|---|---|---|---|
-| 提交 POST 挂起 | 无限挂起 | 无限挂起 | 否，`--max-time` 硬限制 |
-| `timeout` 参数可靠 | 不可靠 | 仅 per-socket | 可靠 |
-| 重复提交风险 | **高** | **高** | 低 |
+本技能（6A/6B/6C）提交与查询命令：
 
 ```powershell
 # 提交任务
@@ -459,10 +459,12 @@ result.get("results", {}).get("output", [])  # 静默失败
 ### 批量出片流程（以 6 集为例）
 
 1. 提交 E01-E03（谨慎时 E01-E02）
-2. 每 20-30 秒轮询，有一个完成立即下载
+2. **脚本内**每 20-30 秒轮询，有一个完成立即下载
 3. 提交下一集填补空位（421 时等 30 秒重试）
 4. 重复直到全部提交
 5. 下载剩余结果
+
+> **agent 层的等待方式另按 `runninghub` 技能「长任务执行规范」§1 执行**：脚本后台运行（非阻塞）、只在状态变化时输出一行，agent 每 **3—5 分钟**查一次且回读 `output_character_count ≤500`，禁止高频轮询回读。脚本内 20-30s 轮询与 agent 低频回读不冲突（前者是服务端查询，后者是 token 成本）。
 
 ### 衔接依赖串行出片（方案 B）
 
