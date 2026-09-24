@@ -1,5 +1,0 @@
-- **发布状态（2026-09-20 11:34 双平台已发布）**：
-- **B站投稿**：账号 'bilibili_main'，bvid **BV17dev6HEyF**，aid 117301261173777，https://www.bilibili.com/video/BV17dev6HEyF ；state -30（审核中），创作声明 **id=1（含AI生成内容）**；分区 tid 47，12 标签，封面=`images/图片_真人质感.png`；`--submit web` 一次带入声明
-- **抖音投稿**：账号 'douyin_dance'，aweme_id **7687455778394869027**，https://www.douyin.com/video/7687455778394869027 ；公开=False，话题 5 个「#AI视频 #凡人修仙传 #国风舞蹈 #AI舞蹈 #古风」，封面同上，自主声明「内容由AI生成」随发布表单一次选定；未触发短信风控门
-- 发布文案：`D01-舞蹈复刻/D01-双平台发布文案.txt`
-- 成片：`D01-舞蹈复刻/video/D01_舞蹈迁移.mp4`

@@ -1,34 +1,21 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+# ===== 只跟踪 .trae / assets / tools 三个目录，其余全部忽略 =====
+*
+!*/
+!.gitignore
+!.gitattributes
 
-# OS
-.DS_Store
+!.trae/
+!.trae/**
+
+!assets/
+!assets/**
+
+!tools/
+!tools/**
+
+# 排除常见的运行期/系统垃圾（即使在上面的白名单目录内）
+**/__pycache__/
+*.pyc
+**/.DS_Store
 Thumbs.db
 desktop.ini
-
-# Logs
-*.log
-
-# Environment
-.env
-.venv
-env/
-venv/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Temporary files
-*.tmp
-*.temp
-
-#media
-*.mp4
-*.mp3

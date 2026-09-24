@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>h3-drama-producer · Skill 讲解视频</title>
+<style>
+/* ================= base ================= */
+:root{
+  --ink:#0d1526; --ink2:#2b3a52; --mut:#6b7a90; --line:#e2e8f2;
+  --bg:#e9edf5; --card:#ffffff;
+  --p:#2f6df6; --p2:#7c5cfc; --cyan:#0ea5b7;
+  --ok:#0f9d63; --warn:#d98200; --bad:#e5484d;
+  --shadow:0 1px 2px rgba(16,32,64,.04),0 8px 24px rgba(16,32,64,.07);
+  --shadow2:0 2px 6px rgba(16,32,64,.06),0 18px 46px rgba(16,32,64,.10);
+  --sans:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+#app{position:fixed;inset:0;display:grid;place-items:center}
+
+/* ================= stage ================= */
+#stage{
+  position:relative;width:1280px;height:720px;background:#fff;border-radius:20px;overflow:hidden;
+  transform-origin:center center;box-shadow:var(--shadow2);
+}
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:20px;
+  box-shadow:inset 0 0 0 1px rgba(13,21,38,.07)}
+
+/* animated backdrop */
+.bg{position:absolute;inset:0;overflow:hidden;background:
+  radial-gradient(1200px 600px at 12% -10%,#eef3ff 0%,transparent 60%),
+  radial-gradient(900px 520px at 105% 8%,#f4efff 0%,transparent 58%),
+  linear-gradient(180deg,#fbfcff 0%,#f6f8fd 100%)}
+.bg .blob{position:absolute;border-radius:50%;filter:blur(58px);opacity:.5}
+.b1{width:420px;height:420px;left:-120px;top:-140px;background:#c8dcff;animation:drift 26s ease-in-out infinite}
+.b2{width:380px;height:380px;right:-110px;top:-90px;background:#dcd0ff;animation:drift 32s ease-in-out infinite reverse}
+.b3{width:460px;height:460px;left:38%;bottom:-260px;background:#c9f2ea;animation:drift 38s ease-in-out infinite}
+@keyframes drift{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(40px,28px,0) scale(1.08)}}
+.bg .mesh{position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(rgba(47,109,246,.055) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(47,109,246,.055) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 0%,#000 20%,transparent 78%);
+          mask-image:radial-gradient(120% 90% at 50% 0%,#000 20%,transparent 78%)}
+
+/* ================= hud ================= */
+#hud{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;
+  justify-content:space-between;padding:0 30px;z-index:6}
+.brand{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;letter-spacing:.2px;color:var(--ink2)}
+.brand .mark{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--p),var(--p2));
+  box-shadow:0 4px 12px rgba(47,109,246,.32);position:relative}
+.brand .mark::after{content:"";position:absolute;inset:6px;border-radius:2px;background:#fff;opacity:.92}
+.brand code{font-family:var(--mono);font-size:13px;color:var(--mut);font-weight:600}
+#counter{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--mut);font-family:var(--mono);font-weight:600}
+#chapterName{max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:var(--sans);font-weight:700;color:var(--ink2);font-size:14px}
+
+/* ================= scenes ================= */
+#scenes{position:absolute;inset:0;z-index:4}
+.scene{position:absolute;inset:0;padding:62px 62px 152px;opacity:0;visibility:hidden;
+  transition:opacity .5s ease,visibility .5s ease}
+.scene.active{opacity:1;visibility:visible}
+.scene.leaving{opacity:0}
+.sc-body{height:100%;display:flex;flex-direction:column}
+.sc-body.center{justify-content:center;align-items:center;text-align:center;gap:6px}
+
+.anim{opacity:0}
+.scene.active .anim{animation:rise .68s cubic-bezier(.2,.72,.24,1) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.scene.active .zoom{animation:zoomin .8s cubic-bezier(.2,.72,.24,1) var(--d,0s) both}
+@keyframes zoomin{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+.scene.active .slideL{animation:sl .7s cubic-bezier(.2,.72,.24,1) var(--d,0s) both}
+@keyframes sl{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:800;letter-spacing:1.6px;
+  color:var(--p);text-transform:uppercase;margin-bottom:14px;font-family:var(--mono)}
+.kicker::before{content:"";width:20px;height:3px;border-radius:2px;background:var(--p)}
+h2{font-size:37px;line-height:1.26;margin:0 0 22px;font-weight:800;letter-spacing:-.4px;max-width:1080px}
+h2 em{font-style:normal;background:linear-gradient(100deg,var(--p),var(--p2));-webkit-background-clip:text;
+  background-clip:text;color:transparent}
+.cover h1{font-size:64px;line-height:1.14;margin:16px 0 18px;font-weight:900;letter-spacing:-1.4px}
+.cover .grad{background:linear-gradient(100deg,var(--p) 6%,var(--p2) 62%,var(--cyan) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:21px;color:var(--ink2);font-weight:600;margin:0 0 26px}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 15px;border-radius:999px;
+  background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);
+  font-size:13px;font-weight:800;letter-spacing:1.2px;color:var(--p);font-family:var(--mono)}
+.row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px}
+.ar{color:#b9c4d6;font-weight:700}
+
+/* chips / cards */
+.chip{padding:9px 15px;border-radius:11px;background:#fff;border:1px solid var(--line);
+  font-size:16.5px;font-weight:700;color:var(--ink2);box-shadow:var(--shadow)}
+.chip.hi{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-color:transparent;
+  box-shadow:0 8px 20px rgba(47,109,246,.28)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r,16px);
+  padding:20px 22px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card .ct{font-size:19px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+.card p{margin:0;font-size:16.5px;line-height:1.6;color:var(--ink2)}
+.card.acc{border-left:4px solid var(--p)}
+.card.seq-item{transition:transform .35s ease,box-shadow .35s ease,border-color .35s ease}
+.card.seq-item.lit{border-color:#c9dbff;box-shadow:0 10px 30px rgba(47,109,246,.16);transform:translateY(-3px)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.note{font-size:15.5px;color:var(--mut);margin:14px 0 0;line-height:1.6;font-weight:600}
+.note b{color:var(--ink)}
+
+/* io diagram */
+.io{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;margin-top:4px}
+.iobox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow)}
+.iobox.out{border-color:#cfe6da;background:linear-gradient(180deg,#f6fdf9,#fff)}
+.iolabel{font-size:12.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);font-family:var(--mono);margin-bottom:7px}
+.iobox.out .iolabel{color:var(--ok)}
+.ioline{font-size:16.5px;font-weight:700;line-height:1.5;color:var(--ink2)}
+.iopipe{display:flex;flex-direction:column;gap:7px;align-items:center}
+.pipechip{padding:5px 13px;border-radius:9px;background:#fff;border:1px dashed #c7d4ea;
+  font-size:13.5px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.principle{margin-top:22px;display:flex;align-items:center;gap:12px;padding:16px 20px;border-radius:16px;
+  background:linear-gradient(100deg,#fff6e8,#fffdf8);border:1px solid #f6e0bd;font-size:17.5px;color:#7a4d00}
+.principle b{color:#5b3900}
+.pdot{width:11px;height:11px;border-radius:50%;background:var(--warn);flex:none;
+  box-shadow:0 0 0 5px rgba(217,130,0,.16);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(217,130,0,.16)}50%{box-shadow:0 0 0 9px rgba(217,130,0,.06)}}
+.sayrow{display:flex;gap:11px;flex-wrap:wrap;margin-top:20px}
+.say{padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--line);
+  font-size:16px;font-weight:700;color:var(--ink2);box-shadow:var(--shadow);font-family:var(--mono)}
+.say::before{content:"“";color:var(--p);font-weight:900;margin-right:3px}
+.say::after{content:"”";color:var(--p);font-weight:900;margin-left:3px}
+
+/* spec table */
+.spec{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:17px}
+.spec td{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 18px}
+.spec tr td:first-child{border-left:1px solid var(--line);border-radius:12px 0 0 12px;
+  color:var(--mut);font-weight:700;width:240px}
+.spec tr td:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0;
+  font-weight:800;font-family:var(--mono);color:var(--ink)}
+.spec tr.hi td{background:linear-gradient(100deg,#eef4ff,#fbfcff);border-color:#cfdeff}
+.spec tr.hi td:last-child{color:var(--p)}
+.gridbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.gridbox .gt{font-size:13px;font-weight:800;letter-spacing:1.2px;color:var(--mut);font-family:var(--mono);margin-bottom:10px}
+.frames{display:grid;grid-template-columns:repeat(18,1fr);gap:4px}
+.frames i{aspect-ratio:1;border-radius:3px;background:#eef1f7}
+.frames i.on{background:linear-gradient(135deg,var(--p),var(--p2))}
+.frames i.part{background:#c9dbff}
+.conv{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.conv div{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:var(--ink2);
+  padding:6px 12px;border-radius:9px;background:#f7f9fd;font-family:var(--mono)}
+.conv b{color:var(--p)}
+
+/* flow */
+.flowrow{display:flex;align-items:center;gap:8px;justify-content:center}
+.node{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 10px;
+  text-align:center;box-shadow:var(--shadow);transition:all .35s ease}
+.node .n{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--mut);letter-spacing:1px}
+.node .l{font-size:15.5px;font-weight:800;color:var(--ink2);margin-top:4px;line-height:1.28}
+.node.lit{border-color:#bcd3ff;background:linear-gradient(180deg,#eef4ff,#fff);
+  box-shadow:0 10px 26px rgba(47,109,246,.18);transform:translateY(-4px)}
+.node.lit .n{color:var(--p)}
+.node.lit .l{color:var(--p)}
+.far{color:#c3cddc;font-weight:900;flex:none}
+.wrapmark{text-align:right;color:#c3cddc;font-weight:900;padding-right:6px;font-size:20px}
+.flowgap{height:14px}
+
+/* gate / warn */
+.gate{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center}
+.gbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow)}
+.gbox.bad{border-color:#f6c9cb;background:linear-gradient(180deg,#fff6f6,#fff)}
+.gbox.good{border-color:#bfe8d3;background:linear-gradient(180deg,#f4fdf8,#fff)}
+.gbox .gh{font-size:15px;font-weight:800;margin-bottom:6px}
+.gbox .gb{font-size:15px;color:var(--ink2);line-height:1.55;font-weight:600}
+.gicon{font-size:30px;text-align:center}
+.warnbox{margin-top:16px;display:flex;gap:12px;padding:15px 18px;border-radius:14px;
+  background:linear-gradient(100deg,#fff5f5,#fffaf9);border:1px solid #f6cdcf}
+.warnbox .wt{font-weight:800;color:var(--bad);flex:none;font-size:16.5px}
+.warnbox .wb{font-size:16px;color:#7c2d30;line-height:1.55;font-weight:600}
+.okbox{margin-top:16px;display:flex;gap:12px;padding:15px 18px;border-radius:14px;
+  background:linear-gradient(100deg,#f2fbf6,#fbfffd);border:1px solid #c8e9d8}
+.okbox .wt{font-weight:800;color:var(--ok);flex:none;font-size:16.5px}
+.okbox .wb{font-size:16px;color:#14512f;line-height:1.55;font-weight:600}
+
+/* pills */
+.pills{display:flex;flex-wrap:wrap;gap:10px}
+.pill{padding:9px 16px;border-radius:11px;background:#fff;border:1px solid var(--line);
+  font-size:16px;font-weight:700;color:var(--ink2);box-shadow:var(--shadow)}
+.pill.on{background:linear-gradient(135deg,#eef4ff,#fff);border-color:#c5d8ff;color:var(--p)}
+.pill .idx{font-family:var(--mono);font-size:12.5px;color:var(--mut);margin-right:6px}
+
+/* mono / tree / code */
+.mono{font-family:var(--mono);font-size:15px;line-height:1.85;background:#0f172a;color:#dbe6f5;
+  border-radius:14px;padding:16px 20px;box-shadow:var(--shadow2);white-space:pre;overflow:hidden}
+.mono .k{color:#7fb2ff}.mono .s{color:#7ee0b5}.mono .c{color:#7c8ba1}.mono .w{color:#ffc46b}
+.tree{font-family:var(--mono);font-size:15.5px;line-height:1.95;color:var(--ink2);white-space:pre;
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px;box-shadow:var(--shadow)}
+.tree b{color:var(--p)}.tree i{color:var(--mut);font-style:normal}
+
+/* checklist */
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:16px;color:var(--ink2);font-weight:600;
+  background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;box-shadow:var(--shadow)}
+.chk .bx{width:19px;height:19px;border-radius:6px;background:linear-gradient(135deg,var(--ok),#34c98f);
+  flex:none;position:relative;margin-top:1px}
+.chk .bx::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;
+  border-right:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(40deg)}
+.chk.no .bx{background:linear-gradient(135deg,var(--bad),#f0716f)}
+.chk.no .bx::after{border:none;left:5.5px;top:9px;width:9px;height:0;border-top:2.5px solid #fff;transform:none}
+
+/* bars */
+.bars{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.bar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 16px;box-shadow:var(--shadow)}
+.bar .bh{display:flex;justify-content:space-between;font-size:16px;font-weight:800;margin-bottom:9px}
+.bar .bh span:last-child{font-family:var(--mono);font-size:14.5px;color:var(--mut)}
+.bar .track{height:9px;border-radius:9px;background:#f0f3f9;overflow:hidden}
+.bar .fill{height:100%;border-radius:9px;background:linear-gradient(90deg,var(--p),var(--p2));width:0;
+  transition:width 1s cubic-bezier(.2,.72,.24,1)}
+.scene.active .bar .fill{width:var(--w,50%)}
+.bar .bt{font-size:14.5px;color:var(--mut);margin-top:8px;font-weight:600}
+
+/* pitfalls */
+.plist{display:flex;flex-direction:column;gap:10px}
+.pit{display:flex;gap:13px;align-items:center;background:#fff;border:1px solid var(--line);
+  border-radius:13px;padding:12px 16px;box-shadow:var(--shadow);transition:all .35s ease}
+.pit .pn{width:26px;height:26px;border-radius:8px;background:#f1f4fa;color:var(--ink2);flex:none;
+  display:grid;place-items:center;font-size:13.5px;font-weight:900;font-family:var(--mono)}
+.pit .pt{font-size:16.5px;font-weight:700;color:var(--ink2);line-height:1.4}
+.pit .pt b{color:var(--bad)}
+.pit.lit{border-color:#f6cdcf;box-shadow:0 10px 26px rgba(229,72,77,.12);transform:translateX(4px)}
+.pit.lit .pn{background:linear-gradient(135deg,var(--bad),#f0716f);color:#fff}
+
+/* confirm card */
+.confirm{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 22px;box-shadow:var(--shadow2);
+  font-family:var(--mono);font-size:15px;line-height:1.95;color:var(--ink2)}
+.confirm .ct{font-size:17px;font-weight:900;color:var(--ink);letter-spacing:1px;margin-bottom:8px;
+  font-family:var(--sans)}
+.confirm .k{color:var(--mut)}
+.confirm .v{color:var(--p);font-weight:700}
+.confirm .money{color:var(--warn);font-weight:700}
+
+/* ================= subtitles ================= */
+#subs{position:absolute;left:0;right:0;bottom:96px;z-index:8;display:flex;justify-content:center;
+  pointer-events:none;padding:0 70px}
+#subtext{max-width:1010px;text-align:center;font-size:22.5px;line-height:1.5;font-weight:700;
+  color:var(--ink);background:rgba(255,255,255,.9);backdrop-filter:blur(10px);
+  border:1px solid rgba(226,232,242,.95);border-radius:14px;padding:11px 22px;
+  box-shadow:0 10px 30px rgba(16,32,64,.10);opacity:0;transform:translateY(8px);
+  transition:opacity .3s ease,transform .3s ease}
+#subtext.show{opacity:1;transform:translateY(0)}
+#subs.off{display:none}
+
+/* ================= player ================= */
+#player{position:absolute;left:0;right:0;bottom:0;height:88px;z-index:9;
+  background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.94) 42%,#fff);
+  display:flex;flex-direction:column;justify-content:flex-end;padding:0 30px 16px}
+#ticks{display:flex;gap:4px;height:5px;margin-bottom:9px}
+.tk{flex:1;height:100%;border-radius:3px;background:#e4e9f2;cursor:pointer;transition:background .25s,transform .25s;position:relative}
+.tk:hover{background:#c3d0e6;transform:scaleY(1.6)}
+.tk.done{background:#c9dbff}
+.tk.on{background:linear-gradient(90deg,var(--p),var(--p2))}
+#bar{height:4px;border-radius:3px;background:#eef1f7;overflow:hidden;margin-bottom:12px}
+#barfill{height:100%;width:0;background:linear-gradient(90deg,var(--p),var(--p2),var(--cyan))}
+#ctrls{display:flex;align-items:center;gap:9px}
+.btn{height:38px;min-width:38px;padding:0 13px;border-radius:11px;border:1px solid var(--line);background:#fff;
+  color:var(--ink2);font-size:14.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;
+  justify-content:center;gap:7px;font-family:var(--sans);transition:all .18s ease;box-shadow:0 1px 2px rgba(16,32,64,.04)}
+.btn:hover{border-color:#c3d3ef;background:#f7faff;color:var(--p);transform:translateY(-1px)}
+.btn.pri{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-color:transparent;
+  box-shadow:0 6px 18px rgba(47,109,246,.30)}
+.btn.pri:hover{color:#fff;background:linear-gradient(135deg,#2a63e6,#6f4ff0)}
+.btn.on{background:#eef4ff;border-color:#c5d8ff;color:var(--p)}
+.btn .ic{font-size:15px;line-height:1}
+.spacer{flex:1}
+#time{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--mut);letter-spacing:.3px}
+#hint{position:absolute;left:30px;bottom:100px;z-index:7;font-size:13.5px;color:var(--mut);font-weight:600;
+  font-family:var(--mono);opacity:.9;transition:opacity .5s ease}
+#hint.gone{opacity:0}
+
+/* ================= boot overlay ================= */
+#boot{position:absolute;inset:0;z-index:20;background:rgba(246,248,253,.72);backdrop-filter:blur(7px);
+  display:grid;place-items:center;cursor:pointer;transition:opacity .45s ease,visibility .45s ease}
+#boot.hide{opacity:0;visibility:hidden}
+.boot-in{text-align:center}
+.play{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--p2));
+  display:grid;place-items:center;margin:0 auto 20px;box-shadow:0 18px 44px rgba(47,109,246,.42);
+  animation:bob 2.6s ease-in-out infinite}
+.play::after{content:"";width:0;height:0;border-left:26px solid #fff;border-top:16px solid transparent;
+  border-bottom:16px solid transparent;margin-left:8px}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.035)}}
+.boot-in h3{margin:0 0 8px;font-size:26px;font-weight:900;letter-spacing:-.3px;color:var(--ink)}
+.boot-in p{margin:0;font-size:15.5px;color:var(--mut);font-weight:600;line-height:1.7}
+.boot-in p code{font-family:var(--mono);background:#fff;border:1px solid var(--line);border-radius:6px;
+  padding:1px 6px;font-size:14px;color:var(--ink2)}
+#voiceTip{margin-top:14px;font-size:14px;font-weight:700;color:var(--p)}
+#toast{position:absolute;left:50%;bottom:118px;transform:translate(-50%,10px);z-index:30;
+  background:rgba(13,21,38,.9);color:#fff;font-size:14.5px;font-weight:700;padding:9px 18px;border-radius:10px;
+  opacity:0;transition:all .3s ease;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="stage">
+  <div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="mesh"></div></div>
+
+  <div id="hud">
+    <div class="brand"><span class="mark"></span>h3-drama-producer<code>/ SKILL 讲解</code></div>
+    <div id="counter"><span id="chapterName">封面</span><span id="cnum">01 / 13</span></div>
+  </div>
+
+  <div id="scenes">
+
+    <!-- ============ 1 封面 ============ -->
+    <section class="scene cover" data-title="封面" data-dur="8"
+      data-cues='["h3-drama-producer：H3 剧情视频生产流水线。","把一句创意，变成一条可以复用的出片流水线。"]'>
+      <div class="sc-body center">
+        <div class="anim badge" style="--d:.05s">TRAE SKILL · 端到端自动化</div>
+        <h1 class="zoom" style="--d:.12s">H3 剧情视频<br><span class="grad">生产流水线</span></h1>
+        <p class="anim sub" style="--d:.3s">从创意到成片，十步走完 · Ref2VA 提示词 · RunningHub 出片</p>
+        <div class="anim row" style="--d:.46s">
+          <span class="chip">剧本创作</span><span class="ar">→</span>
+          <span class="chip">分集</span><span class="ar">→</span>
+          <span class="chip">元素识别</span><span class="ar">→</span>
+          <span class="chip">资产检索</span><span class="ar">→</span>
+          <span class="chip">H3 提示词</span><span class="ar">→</span>
+          <span class="chip hi">出片</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2 一句话定位 ============ -->
+    <section class="scene" data-title="一句话定位" data-dur="14"
+      data-cues='["输入创意或完整剧本，输出可以播放的成片：分集、元素识别、资产检索、提示词撰写，最后提交 RunningHub。","核心原则：每一步动手生成前，先把关键决策问清楚，绝不跳步。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">01 / 一句话定位</div>
+        <h2 class="anim" style="--d:.08s">它把「一句创意」到「成片」的全过程，<em>变成可复用的流水线</em></h2>
+        <div class="io anim" style="--d:.22s">
+          <div class="iobox">
+            <div class="iolabel">INPUT</div>
+            <div class="ioline">创意 · 剧情大纲<br>IP 二创点子 · 完整剧本</div>
+          </div>
+          <div class="iopipe">
+            <div class="pipechip">剧本 / 分集</div>
+            <div class="pipechip">元素识别</div>
+            <div class="pipechip">资产检索</div>
+            <div class="pipechip">H3 提示词</div>
+            <div class="pipechip">校验</div>
+            <div class="pipechip">出片</div>
+          </div>
+          <div class="iobox out">
+            <div class="iolabel">OUTPUT</div>
+            <div class="ioline">成片 MP4<br>分集剧本 · 资产清单 · 任务记录</div>
+          </div>
+        </div>
+        <div class="principle anim" style="--d:.5s">
+          <span class="pdot"></span>
+          <span><b>核心原则</b>：每一步动手生成之前，先把关键决策问清楚 —— <b>绝不跳步生成</b></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3 触发条件 ============ -->
+    <section class="scene" data-title="触发条件" data-dur="11"
+      data-cues='["什么时候它会出手？你给出创意、剧情大纲、IP 二创点子，或者一份完整剧本。","只要你想要 H3 剧本、资产清单、提示词，或者直接出片，它就会被触发。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">02 / 触发条件</div>
+        <h2 class="anim" style="--d:.08s">什么样的输入，会唤醒这份 Skill</h2>
+        <div class="g3">
+          <div class="card acc anim seq-item" style="--d:.2s">
+            <div class="ct">创意类</div>
+            <p>一句话点子、故事梗概、人物设定、情节走向 —— 还没逐场展开</p>
+          </div>
+          <div class="card acc anim seq-item" style="--d:.3s">
+            <div class="ct">大纲类</div>
+            <p>剧情大纲、IP 二创点子、系列剧整体构思</p>
+          </div>
+          <div class="card acc anim seq-item" style="--d:.4s">
+            <div class="ct">完整剧本</div>
+            <p>已有场景划分、逐场动作描述、具体对白文本</p>
+          </div>
+        </div>
+        <div class="sayrow anim" style="--d:.56s">
+          <span class="say">生成一个短剧</span>
+          <span class="say">把大纲变成视频</span>
+          <span class="say">做工作流</span>
+          <span class="say">出片</span>
+        </div>
+        <p class="note anim" style="--d:.66s">拿不准输入类型时，直接问用户「这是完整剧本还是创意大纲」—— <b>不替用户猜</b>。</p>
+      </div>
+    </section>
+
+    <!-- ============ 4 能力边界 ============ -->
+    <section class="scene" data-title="H3 能力边界" data-dur="15"
+      data-cues='["动手之前先看能力边界：单集 4 到 15 秒灵活，单片上限 15 秒，超过就必须分集。","最大画幅 1344 × 768，24fps，帧数必须落在 17k+5 网格上。","常用换算：5 秒 124 帧，8 秒 192，10 秒 243，12 秒 294，15 秒 362。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">03 / H3 能力边界</div>
+        <h2 class="anim" style="--d:.08s">先看硬约束 —— 它决定了分集与帧数的一切决策</h2>
+        <div class="g2" style="grid-template-columns:1.45fr 1fr;align-items:start">
+          <table class="spec anim" style="--d:.2s">
+            <tr class="hi"><td>单集时长</td><td>4 — 15 秒灵活（常用 5 / 10 / 15 秒档）</td></tr>
+            <tr><td>单片上限</td><td>15 秒，超过必须分集</td></tr>
+            <tr><td>最大画幅</td><td>1344 × 768（16:9 · 0.98MP）</td></tr>
+            <tr><td>帧率</td><td>24 fps · 帧数须落在 17k+5 网格</td></tr>
+            <tr><td>帧数取法</td><td>取 ≥ 时长×24 的最小网格值</td></tr>
+          </table>
+          <div class="gridbox anim" style="--d:.34s">
+            <div class="gt">17k + 5 FRAME GRID</div>
+            <div class="frames" id="frames"></div>
+            <div class="conv">
+              <div><span>5s</span><b>124 帧</b></div>
+              <div><span>8s</span><b>192 帧</b></div>
+              <div><span>10s</span><b>243 帧</b></div>
+              <div><span>12s</span><b>294 帧</b></div>
+              <div><span>15s</span><b>362 帧</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5 十步总览 ============ -->
+    <section class="scene" data-title="十步流程总览" data-dur="18" data-seq="node"
+      data-cues='["整条流水线一共十步：判断输入、分集、元素识别、资产补全、提示词、选提交方式。","然后是图片上传、payload 校验、出片确认，最后提交、轮询、下载和归档。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">04 / 流程总览</div>
+        <h2 class="anim" style="--d:.08s">十步闭环 —— <em>每一步都有交付物</em></h2>
+        <div style="margin-top:6px">
+          <div class="flowrow anim" style="--d:.2s">
+            <div class="node"><div class="n">STEP 1</div><div class="l">判断输入</div></div>
+            <div class="far">→</div>
+            <div class="node"><div class="n">STEP 2</div><div class="l">分集定长</div></div>
+            <div class="far">→</div>
+            <div class="node"><div class="n">STEP 3</div><div class="l">元素识别<br>资产检索</div></div>
+            <div class="far">→</div>
+            <div class="node"><div class="n">STEP 4</div><div class="l">缺失资产<br>65535 补全</div></div>
+            <div class="far">→</div>
+            <div class="node"><div class="n">STEP 5</div><div class="l">H3 提示词<br>Ref2VA</div></div>
+          </div>
+          <div class="wrapmark anim" style="--d:.3s">↳</div>
+          <div class="flowgap"></div>
+          <div class="flowrow anim" style="--d:.34s">
+            <div class="node"><div class="n">STEP 6</div><div class="l">选提交方式<br>6A / 6B / 6C</div></div>
+            <div class="far">→</div>
+            <div class="node"><div class="n">STEP 7</div><div class="l">图片上传</div></div>
+            <div class="far">→</div>
+            <div class="node"><div class="n">STEP 8</div><div class="l">payload<br>构建校验</div></div>
+            <div class="far">→</div>
+            <div class="node"><div class="n">STEP 9</div><div class="l">出片确认卡</div></div>
+            <div class="far">→</div>
+            <div class="node"><div class="n">STEP 10</div><div class="l">提交 · 轮询<br>下载归档</div></div>
+          </div>
+        </div>
+        <p class="note anim" style="--d:.66s">关键点：<b>Step 3–4 必须先把所有参考图备齐</b>，Step 5 的保留分析才能基于真实图片撰写，不需要事后回填。</p>
+      </div>
+    </section>
+
+    <!-- ============ 6 Step 1-2 ============ -->
+    <section class="scene" data-title="Step 1-2 剧本与分集" data-dur="17"
+      data-cues='["第一步判断输入：完整剧本直接落盘；只有创意，就调用 story-craft 先写完整剧本。","第二步按剧情节奏分集：单一动作 5 秒，小转折 8 到 10 秒，完整关系变化 12 到 15 秒。","要不要衔接前后集，决定了出片是并行还是串行。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">05 / STEP 1 — 2 剧本与分集</div>
+        <h2 class="anim" style="--d:.08s">先分岔：<em>成品剧本</em>还是<em>一句创意</em></h2>
+        <div class="g2" style="align-items:start">
+          <div class="card anim" style="--d:.2s;border-left:4px solid #0f9d63">
+            <div class="ct">完整剧本 <span style="font-family:var(--mono);font-size:13px;color:var(--mut)">→ 直接落盘</span></div>
+            <p>已有场景划分、逐场动作、具体对白文本 —— 跳过创作，直接写入 <code style="font-family:var(--mono);color:var(--p)">&lt;剧名&gt;-剧本.md</code>，进入分集。</p>
+          </div>
+          <div class="card anim" style="--d:.3s;border-left:4px solid var(--p)">
+            <div class="ct">创意 / 大纲 <span style="font-family:var(--mono);font-size:13px;color:var(--mut)">→ 调用 story-craft</span></div>
+            <p>只有梗概和人物设定时，先按 H3 短剧容量定制写法创作剧本：每场对应未来一集，对白控制在 15 秒内说完，出场即给造型要点。</p>
+          </div>
+        </div>
+        <div class="g3 anim" style="--d:.46s;margin-top:16px">
+          <div class="card"><div class="ct">5 秒</div><p>单一动作 / 一个笑点</p></div>
+          <div class="card"><div class="ct">8 — 10 秒</div><p>一个小转折</p></div>
+          <div class="card"><div class="ct">12 — 15 秒</div><p>一次完整的关系变化</p></div>
+        </div>
+        <div class="okbox anim" style="--d:.6s">
+          <span class="wt">跨集衔接</span>
+          <span class="wb"><b>A 衔接图先行</b>：Step 4 先造衔接帧 → 出片可并行，但尾帧是预期值。
+          <b style="margin-left:8px">B 截取尾帧</b>：E01 出片后截真实尾帧 → 衔接精准，但必须串行。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7 Step 3-4 ============ -->
+    <section class="scene" data-title="Step 3-4 元素与资产" data-dur="20"
+      data-cues='["第三步从剧本里提取角色、场景、道具三类元素，再按项目私有、IP 共享、备用源的顺序检索。","找不到的走第四步：先出审批表格，再用 65535 生成、人工核验、归档。","这里有一条强制闸门：场景与角色三视图画风不一致，必须停下来提醒用户，不得默认放行。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">06 / STEP 3 — 4 元素识别与资产补全</div>
+        <h2 class="anim" style="--d:.08s">找得到就引用，找不到就补 —— <em>但画风必须统一</em></h2>
+        <div class="g2" style="align-items:start">
+          <div class="anim" style="--d:.2s">
+            <div class="pills" style="margin-bottom:12px">
+              <span class="pill"><span class="idx">角色</span>三视图 + 造型</span>
+              <span class="pill"><span class="idx">场景</span>空镜 + 氛围</span>
+              <span class="pill"><span class="idx">道具</span>关键物特写</span>
+            </div>
+            <div class="tree" style="font-size:14.5px">检索顺序
+  <b>1</b> 项目私有   &lt;项目&gt;\scene  props
+  <b>2</b> IP 共享    assets\&lt;资源包&gt;\
+  <b>3</b> 备用源     如 凡人包 → 人物图\</div>
+          </div>
+          <div class="card anim" style="--d:.34s;border-left:4px solid var(--p)">
+            <div class="ct">缺失 → Step 4 四步走</div>
+            <p style="line-height:1.9">
+              <b>① 先审批</b>：整理缺失资产生成计划表格，用户批准后才动手<br>
+              <b>② 再生成</b>：角色图生图锁脸改装，场景文生图空镜，道具特写<br>
+              <b>③ 人工核验</b>：角色看身份锚点，场景看画风是否统一<br>
+              <b>④ 归档</b>：三视图必归 IP 共享；场景道具按通用性判断
+            </p>
+          </div>
+        </div>
+        <div class="warnbox anim" style="--d:.56s">
+          <span class="wt">强制闸门</span>
+          <span class="wb">场景图与角色三视图<b>画风不一致时，禁止直接使用</b>。必须停下说明差异与风险、给出重绘 / 更换 / 书面确认三个选项 ——
+          2026-09《勾栏听曲》六集实测教训：Ref2VA 会按占画面更大的场景图统一风格，角色脸被「翻译」后五官走形。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8 Step 5 提示词 ============ -->
+    <section class="scene" data-title="Step 5 H3 提示词" data-dur="15"
+      data-cues='["第五步调用 h3-prompt-writing，按 Ref2VA 六段结构写每集提示词。","所有参考图先就位，保留分析直接照图写；衔接集改用 I2VA 首帧驱动。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">07 / STEP 5 生成 H3 提示词</div>
+        <h2 class="anim" style="--d:.08s">调用 <em>h3-prompt-writing</em>，按 Ref2VA 原生结构落笔</h2>
+        <div class="pills anim" style="--d:.2s">
+          <span class="pill on"><span class="idx">01</span>subject_definitions</span>
+          <span class="pill on"><span class="idx">02</span>summary</span>
+          <span class="pill on"><span class="idx">03</span>retention_analysis</span>
+          <span class="pill on"><span class="idx">04</span>detailed_description</span>
+          <span class="pill on"><span class="idx">05</span>overall_soundscape</span>
+          <span class="pill on"><span class="idx">06</span>non_diegetic_music</span>
+        </div>
+        <div class="g3 anim" style="--d:.4s;margin-top:18px">
+          <div class="card"><div class="ct">参考图先就位</div><p>保留分析照着实际图片写，与资产清单逐项核对，不留占位描述</p></div>
+          <div class="card"><div class="ct">衔接集换模式</div><p>改用 I2VA 首帧驱动，[Shot 1] 从首帧画面开始向前发展</p></div>
+          <div class="card"><div class="ct">格式约束</div><p>对白 &lt;d&gt;[语言]文本&lt;/d&gt; + 说话人编号；时间线 0—Ns 无缺口</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 9 Step 6 提交方式 ============ -->
+    <section class="scene" data-title="Step 6 三种提交方式" data-dur="16"
+      data-cues='["第六步选提交方式，入口是本地应用注册表，不是平台收藏夹。","6A 用 appId 直调应用，批量首选；6B 用 workflowId 直连工作流；6C 用模板生成工作流 JSON。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">08 / STEP 6 选择提交方式</div>
+        <h2 class="anim" style="--d:.08s">三条路，<em>先读注册表再选</em></h2>
+        <div class="g3" style="margin-top:2px">
+          <div class="card seq-item anim" style="--d:.2s;border-top:4px solid var(--p)">
+            <div class="ct">6A 应用 API</div>
+            <p><b style="color:var(--mut);font-family:var(--mono);font-size:13.5px">appId + 节点映射</b><br>
+            nodeInfoList 覆盖节点字段，无需管理 JSON。常规批量出片首选（t8lite）。</p>
+          </div>
+          <div class="card seq-item anim" style="--d:.32s;border-top:4px solid var(--p2)">
+            <div class="ct">6B 工作流直连</div>
+            <p><b style="color:var(--mut);font-family:var(--mono);font-size:13.5px">workflowId</b><br>
+            直接用平台上已调好的 ComfyUI 工作流，参数改法与 6A 完全相同。</p>
+          </div>
+          <div class="card seq-item anim" style="--d:.44s;border-top:4px solid var(--cyan)">
+            <div class="ct">6C 模板工作流</div>
+            <p><b style="color:var(--mut);font-family:var(--mono);font-size:13.5px">模板 JSON</b><br>
+            需要自定义节点图时用：锁死 1344×768、自己接多路参考图。</p>
+          </div>
+        </div>
+        <div class="okbox anim" style="--d:.6s">
+          <span class="wt">为什么读注册表</span>
+          <span class="wb">RunningHub API 查不到「我的收藏」—— 列表接口返回的是 7 万+ 条应用市场全量推荐，无法定位个人常用应用。
+          所以把常用 appId / workflowId / 模板登记在本地注册表里，用它当入口。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10 Step 7-8 上传与校验 ============ -->
+    <section class="scene" data-title="Step 7-8 上传与校验" data-dur="19"
+      data-cues='["第七步上传图片：6A 走 openapi 接口，6B、6C 走 task 接口，两套模块不能混用。","上传后留两到五分钟再提交，否则会在 LoadImage 零扣费失败。","第八步校验 payload：槽位、时长、帧数、六段结构、画风一致性，全部通过才继续。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">09 / STEP 7 — 8 上传图片与 payload 校验</div>
+        <h2 class="anim" style="--d:.08s">两套上传接口，<em>千万不要混用</em></h2>
+        <div class="g2" style="align-items:start">
+          <div class="card anim" style="--d:.2s">
+            <div class="ct" style="color:var(--p)">6A · runninghub.upload_file</div>
+            <p style="font-family:var(--mono);font-size:14.5px;line-height:1.8">
+              POST /openapi/v2/media/upload/binary<br>
+              → 返回 <b style="color:var(--p)">openapi/&lt;hash&gt;.png</b><br>
+              填入 nodeInfoList 的 image 字段</p>
+          </div>
+          <div class="card anim" style="--d:.3s">
+            <div class="ct" style="color:var(--p2)">6B / 6C · runninghub_app.upload_file</div>
+            <p style="font-family:var(--mono);font-size:14.5px;line-height:1.8">
+              POST /task/openapi/upload<br>
+              → 返回 <b style="color:var(--p2)">api/xxx.png</b><br>
+              填入 LoadImage 的 widgets_values[0]</p>
+          </div>
+        </div>
+        <div class="warnbox anim" style="--d:.46s">
+          <span class="wt">实测踩坑</span>
+          <span class="wb">6A 任务误 import 了 6B 的模块、把 <b>api/</b> 路径写进 nodeInfoList，会在 LoadImage 报「No such file or directory」。
+          另外短路径写入工作区有分钟级同步延迟 —— <b>上传后秒提交同样会失败</b>。</span>
+        </div>
+        <div class="checks anim" style="--d:.6s">
+          <div class="chk"><span class="bx"></span>槽位引用与图片数量顺序一致</div>
+          <div class="chk"><span class="bx"></span>六段结构齐全 · 时间线无缺口</div>
+          <div class="chk"><span class="bx"></span>时长与分集表一致 · 帧数合法</div>
+          <div class="chk"><span class="bx"></span>保留分析与参考图实际内容一致</div>
+          <div class="chk no"><span class="bx"></span>画风不一致 → 停止提交并提醒</div>
+          <div class="chk no"><span class="bx"></span>方案 B 首帧槽为空是预期，标"待填"</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11 Step 9-10 确认与出片 ============ -->
+    <section class="scene" data-title="Step 9-10 确认与出片" data-dur="19"
+      data-cues='["第九步出一张确认卡，方式、参数、费用一次说清，批准才提交。","第十步执行出片：最多三个任务并发，挂起后绝不立即重试，显存按时长选档。","每集下载后必须抽帧核验，才允许交付。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">10 / STEP 9 — 10 确认与出片</div>
+        <h2 class="anim" style="--d:.08s">一张确认卡，<em>把决策权交回用户</em></h2>
+        <div class="g2" style="grid-template-columns:1.15fr 1fr;align-items:start">
+          <div class="confirm anim" style="--d:.2s">
+            <div class="ct">【出片确认卡】</div>
+            提交方式：<span class="v">t8lite（6A 应用 API · plus）</span><br>
+            参　　数：<span class="v">文戏 ｜ 15s ｜ 16:9 ｜ image1-4</span><br>
+            预估费用：<span class="money">3 集 × ≈160 coins ≈ 480 coins</span><br>
+            payload：<span class="k">E01-E03，每集提示词开头 100 字</span><br>
+            <span class="k">→ 确认提交？或指定任一项调整。</span>
+          </div>
+          <div class="anim" style="--d:.34s">
+            <div class="bars">
+              <div class="bar"><div class="bh"><span>default · 24G</span><span>多图必 OOM</span></div>
+                <div class="track"><div class="fill" style="--w:30%"></div></div>
+                <div class="bt">Ref2VA 多参考图不适用</div></div>
+              <div class="bar"><div class="bh"><span>plus · 48G</span><span>≤ 10s 稳定</span></div>
+                <div class="track"><div class="fill" style="--w:58%"></div></div>
+                <div class="bt">10s 以内必须用它；13s / 15s 必 OOM</div></div>
+              <div class="bar"><div class="bh"><span>ultra · 84G</span><span>≥ 13s 必选</span></div>
+                <div class="track"><div class="fill" style="--w:100%"></div></div>
+                <div class="bt">成本约 plus 10s 的 2.1 — 2.5 倍，不必先试 plus</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="warnbox anim" style="--d:.62s">
+          <span class="wt">两条铁律</span>
+          <span class="wb">账户同时最多 <b>3 个任务</b>（超限返回 421）；提交遇到挂起/超时 <b>绝不立即重试</b> —— 任务可能已在运行，重试即重复扣费，
+          至少等 2—3 分钟再对账，已拿到 taskId 的一律续接不重提。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12 踩坑铁律 ============ -->
+    <section class="scene" data-title="实测踩坑速查" data-dur="15" data-seq="pit"
+      data-cues='["几条实测踩坑值得记住：画风冲突不提交、上传接口不混用、提交挂起不重试。","plus 跑不动 15 秒；查询结果的 results 是列表不是字典；每集必须抽帧核验。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">11 / 实测踩坑速查</div>
+        <h2 class="anim" style="--d:.08s">这些坑，<em>都已经写在 Skill 里了</em></h2>
+        <div class="plist" style="margin-top:2px">
+          <div class="pit anim" style="--d:.2s"><span class="pn">01</span>
+            <span class="pt"><b>画风冲突</b>　场景图与角色三视图风格不一致时，Ref2VA 会把角色「翻译」成场景画风 → 五官走形，禁止带冲突提交</span></div>
+          <div class="pit anim" style="--d:.3s"><span class="pn">02</span>
+            <span class="pt"><b>上传接口混用</b>　6A 的 openapi/ 与 6B·6C 的 api/ 是两套接口，混用必在 LoadImage 报文件不存在</span></div>
+          <div class="pit anim" style="--d:.4s"><span class="pn">03</span>
+            <span class="pt"><b>提交超时重试</b>　超时不等于未送达 —— 立即重试就是重复扣费，等 2—3 分钟再对账</span></div>
+          <div class="pit anim" style="--d:.5s"><span class="pn">04</span>
+            <span class="pt"><b>plus 跑 15 秒</b>　48G 在单采样节点必 OOM，13s 以上直接上 ultra，省下十几分钟轮询</span></div>
+          <div class="pit anim" style="--d:.6s"><span class="pn">05</span>
+            <span class="pt"><b>解析查询结果</b>　results 是<b>列表不是字典</b>，按下标取 url，否则静默失败</span></div>
+          <div class="pit anim" style="--d:.7s"><span class="pn">06</span>
+            <span class="pt"><b>跳过核验</b>　每集下载后必须抽帧核验身份 / 场景 / 动作 / 无水印，才允许交付</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 13 交付与目录 ============ -->
+    <section class="scene" data-title="交付物与目录" data-dur="15"
+      data-cues='["最终交付：剧本、分集剧本、每集提示词、资产清单、成片和任务记录，各归其位。","每一步都留痕，所以任何一集都可以复盘和重跑。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">12 / 交付物与目录约定</div>
+        <h2 class="anim" style="--d:.08s">产出落在哪、叫什么名字，<em>全部有约定</em></h2>
+        <div class="g2" style="grid-template-columns:1fr 1fr;align-items:start">
+          <div class="tree anim" style="--d:.2s">&lt;项目根&gt;\
+  <b>assets\</b>          <i>共享资源总目录</i>
+    应用注册表.md   <i>6A/6B/6C 选择入口</i>
+    工作流模板\     <i>6C 模板</i>
+    凡人\           <i>IP 资源包</i>
+  <b>&lt;剧名&gt;\</b>        <i>项目目录</i>
+    video\          <i>成片 ENN_时间戳.mp4</i>
+    任务记录\       <i>payload · 上传映射</i>
+    衔接帧\         <i>集间衔接帧</i></div>
+          <div class="anim" style="--d:.34s">
+            <div class="pills" style="flex-direction:column;align-items:stretch">
+              <span class="pill">&lt;剧名&gt;-剧本.md <i style="color:var(--mut);font-style:normal">　完整剧本</i></span>
+              <span class="pill">&lt;剧名&gt;-分集剧本.md <i style="color:var(--mut);font-style:normal">　分集表 + 总纲</i></span>
+              <span class="pill">&lt;剧名&gt;N.md <i style="color:var(--mut);font-style:normal">　每集一份提示词</i></span>
+              <span class="pill">资产清单.md <i style="color:var(--mut);font-style:normal">　元素与 Picture 槽对应</i></span>
+              <span class="pill on">video\*.mp4 <i style="font-style:normal">　成片</i></span>
+            </div>
+            <p class="note" style="margin-top:14px">交付时每一集都附上 <b>费用（RH 币）与耗时（秒）</b>，并主动建议下一步：选集出片、调提示词、补资产或换提交方式。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="subs"><div id="subtext"></div></div>
+  <div id="hint">空格 播放/暂停　← → 切章　F 全屏</div>
+
+  <div id="player">
+    <div id="ticks"></div>
+    <div id="bar"><div id="barfill"></div></div>
+    <div id="ctrls">
+      <button class="btn" id="bPrev" title="上一章">⏮</button>
+      <button class="btn pri" id="bPlay" title="播放 / 暂停"><span class="ic">▶</span> 播放</button>
+      <button class="btn" id="bNext" title="下一章">⏭</button>
+      <button class="btn" id="bReset" title="从头播放">↺</button>
+      <span id="time">00:00 / 00:00</span>
+      <span class="spacer"></span>
+      <button class="btn" id="bVoice" title="语音讲解开关">🔊 语音</button>
+      <button class="btn" id="bSub" title="字幕开关">CC</button>
+      <button class="btn" id="bRate" title="播放速度">1.0×</button>
+      <button class="btn" id="bFull" title="全屏">⛶</button>
+    </div>
+  </div>
+
+  <div id="boot">
+    <div class="boot-in">
+      <div class="play"></div>
+      <h3>点击开始播放</h3>
+      <p>共 13 章 · 约 <span id="totalTip">4 分钟</span>　·　从创意到成片的完整链路讲解<br>
+      播放中可用 <code>空格</code> 暂停、<code>←</code> <code>→</code> 切换章节</p>
+      <div id="voiceTip">🔊 已启用中文语音讲解</div>
+    </div>
+  </div>
+  <div id="toast"></div>
+</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- stage scaling ---------- */
+  var stage = document.getElementById('stage');
+  function fit(){
+    var s = Math.min((window.innerWidth - 28) / 1280, (window.innerHeight - 28) / 720);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  /* ---------- frame grid decoration ---------- */
+  (function(){
+    var g = document.getElementById('frames'), on = 0, html = '';
+    for (var i = 0; i < 18 * 5; i++){
+      // mark a "17k+5" style rhythm: every cell index where (i % 18) is on-grid
+      var cell = (i % 18);
+      var cls = (cell % 6 === 0) ? 'on' : (cell % 6 === 3 ? 'part' : '');
+      html += '<i class="' + cls + '"></i>';
+    }
+    g.innerHTML = html;
+  })();
+
+  /* ---------- scene engine ---------- */
+  var scenes = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+  var ticks   = document.getElementById('ticks');
+  var barfill = document.getElementById('barfill');
+  var subtext = document.getElementById('subtext');
+  var subsBox = document.getElementById('subs');
+  var timeEl  = document.getElementById('time');
+  var chName  = document.getElementById('chapterName');
+  var cnum    = document.getElementById('cnum');
+  var toastEl = document.getElementById('toast');
+
+  var UNIT_MS = 250;      // per CJK char
+  var PAD_MS  = 1300;     // speech lead-in / out
+
+  function units(str){
+    var u = 0;
+    for (var i = 0; i < str.length; i++){
+      var c = str.charCodeAt(i);
+      u += (c > 0x2e80 && c < 0xa000) ? 1 : 0.55;
+    }
+    return u;
+  }
+
+  // build meta
+  var meta = scenes.map(function(sc){
+    var cues = [];
+    try { cues = JSON.parse(sc.getAttribute('data-cues') || '[]'); } catch(e){ cues = []; }
+    var base = parseFloat(sc.getAttribute('data-dur') || '12') * 1000;
+    var total = cues.reduce(function(a, c){ return a + units(c); }, 0);
+    var est = total * UNIT_MS + PAD_MS + Math.max(0, cues.length - 1) * 350;
+    var dur = Math.max(base, est);
+
+    // time-slice the cues inside the scene
+    var segs = [], t = 0;
+    var sumU = total || 1;
+    cues.forEach(function(c, i){
+      var share = (units(c) / sumU) * (dur - PAD_MS * 0.55);
+      segs.push({ text: c, start: t, end: t + share });
+      t += share + 350;
+    });
+    if (!segs.length) segs = [{ text: sc.getAttribute('data-title') || '', start: 0, end: dur }];
+    return { el: sc, dur: dur, cues: cues, segs: segs, title: sc.getAttribute('data-title') || '' };
+  });
+
+  var totalMs = meta.reduce(function(a, m){ return a + m.dur; }, 0);
+
+  /* ---------- ticks ---------- */
+  meta.forEach(function(m, i){
+    var d = document.createElement('div');
+    d.className = 'tk'; d.title = (i + 1) + '. ' + m.title;
+    d.style.flexGrow = String(m.dur);
+    d.addEventListener('click', function(){ go(i); });
+    ticks.appendChild(d);
+  });
+  var tks = Array.prototype.slice.call(ticks.children);
+
+  /* ---------- state ---------- */
+  var idx = 0, inScene = 0, playing = false, rate = 1;
+  var last = 0, rafId = 0, seqTimer = 0, curSeg = -1, started = false;
+
+  function fmt(ms){
+    ms = Math.max(0, ms);
+    var s = Math.floor(ms / 1000), m = Math.floor(s / 60);
+    return ('0' + m).slice(-2) + ':' + ('0' + (s % 60)).slice(-2);
+  }
+  function elapsedGlobal(){
+    var e = 0;
+    for (var i = 0; i < idx; i++) e += meta[i].dur;
+    return e + inScene;
+  }
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(function(){ toastEl.classList.remove('show'); }, 1900);
+  }
+
+  /* ---------- narration (SpeechSynthesis) ---------- */
+  var voiceOn = false, zhVoice = null, voicesReady = false;
+
+  function pickVoice(){
+    if (!('speechSynthesis' in window)) return null;
+    var vs = window.speechSynthesis.getVoices() || [];
+    if (!vs.length) return null;
+    var v = vs.filter(function(x){ return /^zh[-_]?(CN|Hans)/i.test(x.lang); })[0]
+         || vs.filter(function(x){ return /^zh/i.test(x.lang); })[0];
+    voicesReady = true;
+    return v || null;
+  }
+  if ('speechSynthesis' in window){
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = function(){
+      var v = pickVoice();
+      if (v) { zhVoice = v; if (!started) document.getElementById('voiceTip').textContent = '🔊 已启用中文语音讲解'; }
+    };
+  }
+  function speak(text){
+    if (!voiceOn || !('speechSynthesis' in window) || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';
+      if (zhVoice) u.voice = zhVoice;
+      u.rate = 1.02; u.pitch = 1;
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function stopSpeech(){ try { window.speechSynthesis.cancel(); } catch(e){} }
+  function pauseSpeech(){ if (voiceOn && 'speechSynthesis' in window) { try { window.speechSynthesis.pause(); } catch(e){} } }
+  function resumeSpeech(){ if (voiceOn && 'speechSynthesis' in window) { try { window.speechSynthesis.resume(); } catch(e){} } }
+
+  /* ---------- sequencer ---------- */
+  function runSeq(m){
+    clearInterval(seqTimer);
+    var key = m.el.getAttribute('data-seq');
+    if (!key) return;
+    var items = Array.prototype.slice.call(m.el.querySelectorAll('.' + key));
+    if (!items.length) return;
+    items.forEach(function(n, i){
+      n.style.transitionDelay = (i * 0.22) + 's';
+    });
+    var step = Math.max(260, (m.dur - 1800) / items.length);
+    var i = 0;
+    var kick = function(){
+      if (i >= items.length) { clearInterval(seqTimer); return; }
+      items[i].classList.add('lit');
+      i++;
+    };
+    setTimeout(kick, 900);
+    seqTimer = setInterval(kick, step);
+  }
+  function resetSeq(m){
+    clearInterval(seqTimer);
+    var key = m.el.getAttribute('data-seq');
+    if (!key) return;
+    Array.prototype.slice.call(m.el.querySelectorAll('.' + key)).forEach(function(n){
+      n.classList.remove('lit'); n.style.transitionDelay = '0s';
+    });
+  }
+
+  /* ---------- enter / leave ---------- */
+  function enter(i, keepSpeech){
+    meta.forEach(function(m, k){
+      m.el.classList.toggle('active', k === i);
+      if (k !== i) resetSeq(m);
+    });
+    var m = meta[i];
+    curSeg = -1; inScene = 0;
+    chName.textContent = m.title;
+    cnum.textContent = ('0' + (i + 1)).slice(-2) + ' / ' + meta.length;
+    tks.forEach(function(t, k){
+      t.classList.toggle('on', k === i);
+      t.classList.toggle('done', k < i);
+    });
+    if (!keepSpeech) speak(m.cues.join(''));
+    setTimeout(function(){ if (idx === i) runSeq(m); }, 60);
+  }
+
+  function go(i){
+    i = Math.max(0, Math.min(meta.length - 1, i));
+    idx = i;
+    enter(i);
+    paint();
+  }
+  function next(){
+    if (idx >= meta.length - 1){ pause(); inScene = meta[idx].dur; paint(); return; }
+    go(idx + 1);
+  }
+  function prev(){
+    if (inScene > 1200) { inScene = 0; paint(); return; }
+    go(idx - 1);
+  }
+
+  /* ---------- paint ---------- */
+  function paint(){
+    var g = Math.min(totalMs, elapsedGlobal());
+    barfill.style.width = (g / totalMs * 100) + '%';
+    timeEl.textContent = fmt(g) + ' / ' + fmt(totalMs);
+
+    var m = meta[idx];
+    var seg = null;
+    for (var i = 0; i < m.segs.length; i++){
+      if (inScene >= m.segs[i].start && inScene < m.segs[i].end) { seg = i; break; }
+    }
+    if (seg === null) seg = inScene < m.segs[0].start ? -1 : m.segs.length - 1;
+    if (seg !== curSeg){
+      curSeg = seg;
+      if (seg < 0){
+        subtext.classList.remove('show');
+      } else {
+        subtext.textContent = m.segs[seg].text;
+        subtext.classList.add('show');
+      }
+    }
+  }
+
+  /* ---------- loop ---------- */
+  function frame(now){
+    if (!playing) return;
+    var dt = Math.min(120, now - last); last = now;
+    inScene += dt * rate;
+    var m = meta[idx];
+    if (inScene >= m.dur){
+      if (idx < meta.length - 1){ idx += 1; enter(idx); }
+      else { inScene = m.dur; paint(); pause(); return; }
+    }
+    paint();
+    rafId = requestAnimationFrame(frame);
+  }
+  function play(){
+    if (playing) return;
+    if (idx === meta.length - 1 && inScene >= meta[idx].dur - 10) { go(0); }
+    playing = true;
+    last = performance.now();
+    document.getElementById('bPlay').innerHTML = '<span class="ic">❚❚</span> 暂停';
+    resumeSpeech();
+    rafId = requestAnimationFrame(frame);
+  }
+  function pause(){
+    playing = false;
+    cancelAnimationFrame(rafId);
+    document.getElementById('bPlay').innerHTML = '<span class="ic">▶</span> 播放';
+    pauseSpeech();
+  }
+  function toggle(){ playing ? pause() : play(); }
+
+  /* ---------- controls ---------- */
+  document.getElementById('bPlay').addEventListener('click', toggle);
+  document.getElementById('bNext').addEventListener('click', next);
+  document.getElementById('bPrev').addEventListener('click', prev);
+  document.getElementById('bReset').addEventListener('click', function(){
+    stopSpeech(); go(0); play();
+  });
+
+  var bSub = document.getElementById('bSub');
+  bSub.classList.add('on');
+  bSub.addEventListener('click', function(){
+    subsBox.classList.toggle('off');
+    bSub.classList.toggle('on', !subsBox.classList.contains('off'));
+  });
+
+  var bVoice = document.getElementById('bVoice');
+  bVoice.addEventListener('click', function(){
+    if (!('speechSynthesis' in window)) { toast('当前浏览器不支持语音合成'); return; }
+    voiceOn = !voiceOn;
+    bVoice.classList.toggle('on', voiceOn);
+    if (voiceOn){
+      zhVoice = zhVoice || pickVoice();
+      if (!zhVoice && voicesReady){ toast('未检测到中文语音包，仅显示字幕'); voiceOn = false; bVoice.classList.remove('on'); return; }
+      toast('语音讲解已开启');
+      speak(meta[idx].cues.join(''));
+    } else {
+      stopSpeech(); toast('语音讲解已关闭');
+    }
+  });
+
+  var rates = [1, 1.25, 1.5, 2], ri = 0;
+  var rateLabels = ['1.0×', '1.25×', '1.5×', '2.0×'];
+  var bRate = document.getElementById('bRate');
+  bRate.addEventListener('click', function(){
+    ri = (ri + 1) % rates.length;
+    rate = rates[ri];
+    bRate.textContent = rateLabels[ri];
+    bRate.classList.toggle('on', ri > 0);
+  });
+
+  var bFull = document.getElementById('bFull');
+  bFull.addEventListener('click', function(){
+    var d = document.documentElement;
+    if (!document.fullscreenElement){ (d.requestFullscreen || function(){}).call(d); }
+    else { document.exitFullscreen(); }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.code === 'Space'){ e.preventDefault(); toggle(); }
+    else if (e.key === 'ArrowRight'){ e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft'){ e.preventDefault(); prev(); }
+    else if (e.key === 'f' || e.key === 'F'){ bFull.click(); }
+    else if (e.key === 'r' || e.key === 'R'){ stopSpeech(); go(0); play(); }
+  });
+
+  /* ---------- boot ---------- */
+  var boot = document.getElementById('boot');
+  document.getElementById('totalTip').textContent = Math.round(totalMs / 60000 * 10) / 10 + ' 分钟';
+
+  function start(){
+    if (started) return;
+    started = true;
+    boot.classList.add('hide');
+    document.getElementById('hint').classList.add('gone');
+    // enable voice if a Chinese voice exists
+    var tip = document.getElementById('voiceTip');
+    if ('speechSynthesis' in window){
+      zhVoice = zhVoice || pickVoice();
+      if (zhVoice){ voiceOn = true; bVoice.classList.add('on'); tip.textContent = '🔊 已启用中文语音讲解'; }
+      else { tip.textContent = '字幕讲解模式（未检测到中文语音包，可点右下角开启）'; }
+    } else {
+      tip.textContent = '字幕讲解模式（当前浏览器不支持语音合成）';
+    }
+    enter(0);
+    paint();
+    play();
+  }
+  boot.addEventListener('click', start);
+
+  /* ---------- init ---------- */
+  enter(0); sneak();
+  function sneak(){
+    // show first scene statically behind the overlay
+    meta[0].el.classList.add('active');
+  }
+  paint();
+  window.__h3 = { meta: meta, totalMs: totalMs, go: go, play: play, pause: pause };
+})();
+</script>
+</body>
+</html>

@@ -15,7 +15,32 @@ import tempfile
 
 import cv2
 
-from extract_frames import find_working_ffmpeg
+
+def find_ffmpeg():
+    """Return path to any ffmpeg executable that runs (needed only for concat
+    stream-copy; frame extraction is handled by the frame-extract skill)."""
+    candidates = [shutil.which("ffmpeg")]
+    candidates += [
+        r"C:\Program Files\ffmpeg\bin\ffmpeg.exe",
+        r"C:\ffmpeg\bin\ffmpeg.exe",
+        r"C:\Program Files (x86)\M_IMG2SCREEN_LY360\ffmpeg.exe",
+        os.path.expanduser(r"~\.trae-cn\ffmpeg\ffmpeg.exe"),
+    ]
+    seen = set()
+    for c in candidates:
+        if not c or not os.path.isfile(c):
+            continue
+        c = os.path.abspath(c)
+        if c in seen:
+            continue
+        seen.add(c)
+        try:
+            subprocess.run([c, "-version"], check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
+            return c
+        except Exception:
+            continue
+    return None
 
 
 def parse_segment_list(path):
@@ -118,7 +143,7 @@ def main():
     segments = parse_segment_list(args.list)
     print(f"segments to merge: {len(segments)}")
 
-    ffmpeg = find_working_ffmpeg()
+    ffmpeg = find_ffmpeg()
 
     if ffmpeg and not args.skip_consistency_check:
         infos = [ffprobe_stream_info(ffmpeg, s) for s in segments]

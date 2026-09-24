@@ -1,5 +1,0 @@
-- **发布状态（2026-09-20 双平台已发布）**：
-- **B站投稿**：账号 'bilibili_main'（韩老魔的宫装女友），bvid **BV1HXeq6wEZ1**，aid 117302402031435，https://www.bilibili.com/video/BV1HXeq6wEZ1 ；state=0 开放浏览（已过审），创作声明 **id=1（含AI生成内容）**；分区 tid 47，12 标签；封面为 B站自动首帧（选定的 8.2s 定格帧为 48 位 PNG，biliup --cover 不兼容报 -111，用户确认接受自动封面）
-- **抖音**：账号 'douyin_dance'，aweme_id 7687482126438042906，https://www.douyin.com/video/7687482126438042906 ；AI 声明已选，5 话题落地
-- 发布文案：`D03-三人组-走廊街舞/D03-双平台发布文案.txt`
-- 成片：`D03-三人组-走廊街舞/video/D03.mp4`

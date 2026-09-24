@@ -177,7 +177,7 @@ Step 3 检索不到的角色/场景/道具，用 **65535 API** 生成。**生成
 1. 用户批准表格后调用 65535 生成（任务定义存档 `任务记录\任务-{元素名}.json`）
 2. **人工核验**：角色核验身份锚点（发型、瞳色、标志性配饰/妆容）是否保留；**场景/道具核验画风是否与角色三视图一致**——核验不通过则调提示词重生成，场景画风冲突未解决不得归档使用
 3. 按表格归档路径落盘。归档规则：**人物三视图必归 IP 共享** `assets\<资源包>\character\<人物名>\`；场景/道具按通用性判断——跨集跨项目可复用归 `assets\<资源包>\`（scene/props），本剧情专属归 `<项目>\`（scene/props），拿不准问用户。新 IP 资源包不存在时按 `assets\<IP名>\{character,scene,props}\` 结构创建
-4. 同步更新 `资产清单.md`、`assets\<资源包>\character\_人物资产索引.md`、`场景索引.md`（场景类）
+4. 同步更新 `资产清单.md` 与索引：**新增人物三视图不手写，跑 `python tools\sync_character_index.py` 预览、确认后加 `--write` 写回**（凡人包为默认目录；其他资源包用 `--base` 指向其 character 目录；脚本规则见 `assets\凡人\资源包使用规范.md` §7）；场景类另更新 `场景索引.md`
 
 ### 4.3 衔接帧生成（方案 A）
 
@@ -471,13 +471,10 @@ result.get("results", {}).get("output", [])  # 静默失败
 分集表标注了方案 B 的衔接集**不参与并行批量**，按依赖顺序串行：
 
 1. 前一集 SUCCESS → 立即下载
-2. **截取尾帧**：本机 ffmpeg 为精简版无法输出图片帧（2026-08 实测），用 **OpenCV** 读最后一帧：
-   ```python
-   import cv2
-   cap = cv2.VideoCapture(r'<前一集成片.mp4>')
-   cap.set(cv2.CAP_PROP_POS_FRAMES, int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1)
-   ret, frame = cap.read()   # ret 为 False 时改为逐帧读到末尾
-   cv2.imwrite(r'<项目>\衔接帧\E01-E02.png', frame)
+2. **截取尾帧**：调用 `frame-extract` 技能（抽帧统一入口，直接走 OpenCV，**不要尝试 ffmpeg、不要现写 cv2 脚本**）：
+   ```powershell
+   python "d:\work\minimax_h3\.trae\skills\frame-extract\scripts\extract_frames.py" `
+     --video "<前一集成片.mp4>" --out "<项目>\衔接帧" --last --png --name E01-E02
    ```
 3. 尾帧上传 runninghub，填入衔接集 payload 的首帧图槽
 4. 提交衔接集，继续轮询
@@ -487,6 +484,8 @@ result.get("results", {}).get("output", [])  # 静默失败
 ### 下载与归档
 
 - 结果 URL **仅 24 小时有效**，SUCCESS 后立即下载到 `<项目>\video\<剧名>ENN_时间戳.mp4`
+- **每集下载后必须抽帧核验才允许交付**：调用 `frame-extract` 技能（抽帧统一入口，OpenCV 直抽，禁止先试 ffmpeg）。10s 成片默认 `--count 5` 均匀五帧，或 `--sheet --count 6` 出一张联系表减少读图；核验角色身份/服装、场景、动作、无多余人物、无文字水印
+- 核验不通过：改提示词/参数重跑，再重新抽帧；不得跳过核验直接交付
 - 每集更新 `资产清单.md` 中的 task ID 与视频路径
 
 ### 目录约定（2026-09 起）

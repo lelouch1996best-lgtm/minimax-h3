@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>短剧制作帮手 · 小白版讲解</title>
+<style>
+/* ================= base ================= */
+:root{
+  --ink:#111a2b; --ink2:#33425c; --mut:#6f7d93; --line:#e4e9f2;
+  --bg:#e9edf5; --card:#ffffff;
+  --p:#2f6df6; --p2:#7c5cfc; --warm:#ff7a45; --warm2:#ffa62b;
+  --ok:#12a06a; --bad:#e5484d;
+  --shadow:0 1px 2px rgba(16,32,64,.04),0 8px 24px rgba(16,32,64,.07);
+  --shadow2:0 2px 6px rgba(16,32,64,.06),0 18px 46px rgba(16,32,64,.10);
+  --sans:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+#app{position:fixed;inset:0;display:grid;place-items:center}
+
+#stage{position:relative;width:1280px;height:720px;background:#fff;border-radius:20px;overflow:hidden;
+  transform-origin:center center;box-shadow:var(--shadow2)}
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:20px;
+  box-shadow:inset 0 0 0 1px rgba(17,26,43,.07)}
+
+.bg{position:absolute;inset:0;overflow:hidden;background:
+  radial-gradient(1200px 620px at 10% -12%,#fff3ea 0%,transparent 58%),
+  radial-gradient(950px 560px at 106% 6%,#eaf1ff 0%,transparent 56%),
+  linear-gradient(180deg,#fffdfb 0%,#f7f9fd 100%)}
+.bg .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55}
+.b1{width:440px;height:440px;left:-130px;top:-150px;background:#ffd9c2;animation:drift 27s ease-in-out infinite}
+.b2{width:400px;height:400px;right:-120px;top:-100px;background:#cfdcff;animation:drift 33s ease-in-out infinite reverse}
+.b3{width:470px;height:470px;left:36%;bottom:-270px;background:#cdf0e2;animation:drift 39s ease-in-out infinite}
+@keyframes drift{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(42px,30px,0) scale(1.08)}}
+.bg .mesh{position:absolute;inset:0;opacity:.45;
+  background-image:linear-gradient(rgba(47,109,246,.05) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(47,109,246,.05) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 0%,#000 18%,transparent 76%);
+          mask-image:radial-gradient(120% 90% at 50% 0%,#000 18%,transparent 76%)}
+
+#hud{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;
+  justify-content:space-between;padding:0 30px;z-index:6}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:var(--ink2)}
+.brand .mark{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--warm),var(--p2));
+  box-shadow:0 4px 12px rgba(255,122,69,.32);position:relative}
+.brand .mark::after{content:"";position:absolute;inset:6px;border-radius:2px;background:#fff;opacity:.92}
+.brand code{font-family:var(--sans);font-size:13px;color:var(--mut);font-weight:700}
+#counter{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--mut);font-weight:700}
+#chapterName{max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}
+
+#scenes{position:absolute;inset:0;z-index:4}
+.scene{position:absolute;inset:0;padding:62px 62px 152px;opacity:0;visibility:hidden;
+  transition:opacity .5s ease,visibility .5s ease}
+.scene.active{opacity:1;visibility:visible}
+.sc-body{height:100%;display:flex;flex-direction:column}
+.sc-body.center{justify-content:center;align-items:center;text-align:center}
+
+.anim{opacity:0}
+.scene.active .anim{animation:rise .68s cubic-bezier(.2,.72,.24,1) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.scene.active .zoom{animation:zoomin .85s cubic-bezier(.2,.72,.24,1) var(--d,0s) both}
+@keyframes zoomin{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+
+h2{font-size:40px;line-height:1.24;margin:0 0 18px;font-weight:900;letter-spacing:-.6px;max-width:1120px}
+h2 em{font-style:normal;background:linear-gradient(100deg,var(--warm),var(--p2));-webkit-background-clip:text;
+  background-clip:text;color:transparent}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:800;letter-spacing:1.4px;
+  color:var(--warm);margin-bottom:14px}
+.kicker::before{content:"";width:22px;height:3px;border-radius:2px;background:var(--warm)}
+
+/* cover */
+.cover h1{font-size:60px;line-height:1.16;margin:14px 0 18px;font-weight:900;letter-spacing:-1.4px}
+.cover .grad{background:linear-gradient(100deg,var(--warm) 4%,var(--p2) 58%,var(--p) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .sub{font-size:23px;color:var(--ink2);font-weight:700;margin:0 0 28px;line-height:1.6}
+.row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px}
+.chip{padding:11px 18px;border-radius:12px;background:#fff;border:1px solid var(--line);
+  font-size:18px;font-weight:800;color:var(--ink2);box-shadow:var(--shadow)}
+.chip.hi{background:linear-gradient(135deg,var(--warm),var(--warm2));color:#fff;border-color:transparent;
+  box-shadow:0 8px 20px rgba(255,122,69,.30)}
+.ar{color:#c3cddc;font-weight:900;font-size:17px}
+
+/* generic cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:20px 22px;box-shadow:var(--shadow)}
+.card .ct{font-size:20px;font-weight:900;margin-bottom:9px;display:flex;align-items:center;gap:10px}
+.card p{margin:0;font-size:17.5px;line-height:1.62;color:var(--ink2);font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.note{font-size:17px;color:var(--mut);margin:14px 0 0;line-height:1.6;font-weight:700}
+
+/* metaphor roles */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.role{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);
+  text-align:center}
+.role .avatar{width:54px;height:54px;border-radius:16px;margin:0 auto 12px;display:grid;place-items:center;
+  font-size:24px;font-weight:900;color:#fff}
+.av1{background:linear-gradient(135deg,var(--warm),var(--warm2))}
+.av2{background:linear-gradient(135deg,var(--p),#5b9bff)}
+.av3{background:linear-gradient(135deg,var(--p2),#a78bfa)}
+.role .rt{font-size:20px;font-weight:900;margin-bottom:7px}
+.role .rd{font-size:16.5px;color:var(--ink2);line-height:1.6;font-weight:600}
+
+/* numbered list */
+.nlist{display:flex;flex-direction:column;gap:9px}
+.nitem{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--line);
+  border-radius:14px;padding:11px 20px;box-shadow:var(--shadow);transition:all .35s ease}
+.nitem .num{width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;
+  font-size:19px;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2))}
+.nitem .nt{display:block;font-size:19px;font-weight:900;color:var(--ink);line-height:1.25}
+.nitem .nd{display:block;font-size:15.5px;color:var(--mut);font-weight:600;line-height:1.5;margin-top:3px}
+.nitem.lit{border-color:#ffd8c4;box-shadow:0 10px 26px rgba(255,122,69,.16);transform:translateX(5px)}
+.nitem.lit .num{background:linear-gradient(135deg,var(--warm),var(--warm2))}
+
+/* big steps */
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.step{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 22px;box-shadow:var(--shadow);
+  position:relative;overflow:hidden}
+.step .sn{position:absolute;right:14px;top:2px;font-size:64px;font-weight:900;color:#f2f5fa;line-height:1;letter-spacing:-3px}
+.step .st{font-size:22px;font-weight:900;margin-bottom:8px;position:relative}
+.step .sd{font-size:17px;color:var(--ink2);line-height:1.6;font-weight:600;position:relative}
+.step.s1{border-top:4px solid var(--warm)}
+.step.s2{border-top:4px solid var(--warm2)}
+.step.s3{border-top:4px solid var(--p)}
+.step.s4{border-top:4px solid var(--p2)}
+
+.bubble{margin-top:16px;display:flex;align-items:center;gap:14px;background:#fff;
+  border:1px solid var(--line);border-radius:16px;padding:16px 20px;box-shadow:var(--shadow)}
+.bubble .who{font-size:15px;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--warm),var(--warm2));
+  padding:8px 14px;border-radius:10px;flex:none}
+.bubble .say{font-size:19px;font-weight:800;color:var(--ink2)}
+
+/* promise cards */
+.aprom{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.ap{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow)}
+.ap .at{font-size:19px;font-weight:900;margin-bottom:8px;color:var(--p)}
+.ap .ad{font-size:16.5px;color:var(--ink2);line-height:1.6;font-weight:600}
+.stamp{margin-top:18px;display:flex;gap:14px;align-items:center;justify-content:center;
+  padding:18px;border-radius:16px;background:linear-gradient(100deg,#fff4ee,#fffdfb);border:1px solid #ffdcc9;
+  font-size:21px;font-weight:900;color:#a33f11}
+.stamp .dot{width:12px;height:12px;border-radius:50%;background:var(--warm);flex:none;
+  box-shadow:0 0 0 5px rgba(255,122,69,.16);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(255,122,69,.16)}50%{box-shadow:0 0 0 10px rgba(255,122,69,.05)}}
+
+/* three actions */
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.act{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 20px;box-shadow:var(--shadow);
+  text-align:center}
+.act .glyph{width:66px;height:66px;border-radius:20px;margin:0 auto 14px;display:grid;place-items:center;
+  font-size:26px;font-weight:900;color:#fff}
+.gl1{background:linear-gradient(135deg,var(--warm),var(--warm2))}
+.gl2{background:linear-gradient(135deg,var(--p),#5b9bff)}
+.gl3{background:linear-gradient(135deg,var(--ok),#34c98f)}
+.act .an{font-size:24px;font-weight:900;margin-bottom:8px}
+.act .ad{font-size:16.5px;color:var(--mut);line-height:1.6;font-weight:600}
+
+/* stat cards */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 20px;box-shadow:var(--shadow);
+  text-align:center}
+.stat .sv{font-size:26px;font-weight:900;margin-bottom:10px;
+  background:linear-gradient(100deg,var(--p),var(--p2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .sl{font-size:16.5px;color:var(--ink2);line-height:1.6;font-weight:700}
+
+/* pause situations */
+.sits{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.sit{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);
+  border-top:4px solid var(--warm)}
+.sit .sh{font-size:18px;font-weight:900;margin-bottom:8px}
+.sit .sb{font-size:16.5px;color:var(--ink2);line-height:1.6;font-weight:600}
+
+/* fit / not fit */
+.fit{display:grid;grid-template-columns:1.15fr 1fr;gap:16px}
+.fitbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
+.fitbox.yes{border-left:5px solid var(--ok)}
+.fitbox.no{border-left:5px solid var(--warm2)}
+.fitbox .fh{font-size:20px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.fitem{display:flex;gap:11px;font-size:17px;font-weight:700;color:var(--ink2);line-height:1.6;margin-bottom:10px}
+.fitem:last-child{margin-bottom:0}
+.bul{flex:none;width:20px;font-weight:900}
+.yes .bul{color:var(--ok)}
+.no .bul{color:var(--warm2)}
+
+/* not needed */
+.noNeed{display:flex;flex-direction:column;gap:11px}
+.nn{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);
+  border-radius:14px;padding:13px 20px;box-shadow:var(--shadow)}
+.nn .x{font-size:19px;font-weight:900;color:#c9d3e2;flex:none;width:22px;text-align:center}
+.nn .t{font-size:19px;font-weight:800;color:var(--mut);text-decoration:line-through;
+  text-decoration-color:#cbd5e3;text-decoration-thickness:2px}
+.nn .by{margin-left:auto;font-size:15.5px;font-weight:900;color:var(--ok);
+  background:#eefaf4;border:1px solid #c8e9d8;border-radius:9px;padding:6px 13px;white-space:nowrap}
+
+/* closing */
+.bigline{font-size:52px;font-weight:900;line-height:1.22;letter-spacing:-1px;margin:0 0 24px}
+.bigline em{font-style:normal;background:linear-gradient(100deg,var(--warm),var(--p2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.example{display:inline-flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);
+  border-radius:16px;padding:18px 24px;box-shadow:var(--shadow2)}
+.example .who{font-size:15px;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--warm),var(--warm2));
+  padding:8px 14px;border-radius:10px}
+.example .txt{font-size:22px;font-weight:800;color:var(--ink2)}
+
+/* subtitles */
+#subs{position:absolute;left:0;right:0;bottom:96px;z-index:8;display:flex;justify-content:center;
+  pointer-events:none;padding:0 70px}
+#subtext{max-width:1020px;text-align:center;font-size:24px;line-height:1.5;font-weight:800;
+  color:var(--ink);background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border:1px solid rgba(228,233,242,.95);border-radius:14px;padding:12px 24px;
+  box-shadow:0 10px 30px rgba(16,32,64,.10);opacity:0;transform:translateY(8px);
+  transition:opacity .3s ease,transform .3s ease}
+#subtext.show{opacity:1;transform:translateY(0)}
+#subs.off{display:none}
+
+/* player */
+#player{position:absolute;left:0;right:0;bottom:0;height:88px;z-index:9;
+  background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.94) 42%,#fff);
+  display:flex;flex-direction:column;justify-content:flex-end;padding:0 30px 16px}
+#ticks{display:flex;gap:4px;height:5px;margin-bottom:9px}
+.tk{flex:1;height:100%;border-radius:3px;background:#e4e9f2;cursor:pointer;transition:background .25s,transform .25s}
+.tk:hover{background:#c3d0e6;transform:scaleY(1.6)}
+.tk.done{background:#ffd8c4}
+.tk.on{background:linear-gradient(90deg,var(--warm),var(--p2))}
+#bar{height:4px;border-radius:3px;background:#eef1f7;overflow:hidden;margin-bottom:12px}
+#barfill{height:100%;width:0;background:linear-gradient(90deg,var(--warm),var(--p2),var(--p))}
+#ctrls{display:flex;align-items:center;gap:9px}
+.btn{height:38px;min-width:38px;padding:0 13px;border-radius:11px;border:1px solid var(--line);background:#fff;
+  color:var(--ink2);font-size:14.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;
+  justify-content:center;gap:7px;font-family:var(--sans);transition:all .18s ease;box-shadow:0 1px 2px rgba(16,32,64,.04)}
+.btn:hover{border-color:#ffd0ba;background:#fff8f4;color:var(--warm);transform:translateY(-1px)}
+.btn.pri{background:linear-gradient(135deg,var(--warm),var(--warm2));color:#fff;border-color:transparent;
+  box-shadow:0 6px 18px rgba(255,122,69,.30)}
+.btn.pri:hover{color:#fff;background:linear-gradient(135deg,#f56c36,#f79b1e)}
+.btn.on{background:#fff4ee;border-color:#ffd8c4;color:var(--warm)}
+.btn .ic{font-size:15px;line-height:1}
+.spacer{flex:1}
+#time{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--mut)}
+#hint{position:absolute;left:30px;bottom:100px;z-index:7;font-size:13.5px;color:var(--mut);font-weight:700;
+  opacity:.9;transition:opacity .5s ease}
+#hint.gone{opacity:0}
+
+/* boot */
+#boot{position:absolute;inset:0;z-index:20;background:rgba(248,249,253,.74);backdrop-filter:blur(7px);
+  display:grid;place-items:center;cursor:pointer;transition:opacity .45s ease,visibility .45s ease}
+#boot.hide{opacity:0;visibility:hidden}
+.boot-in{text-align:center;max-width:720px}
+.play{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--warm),var(--p2));
+  display:grid;place-items:center;margin:0 auto 22px;box-shadow:0 18px 46px rgba(255,122,69,.40);
+  animation:bob 2.6s ease-in-out infinite}
+.play::after{content:"";width:0;height:0;border-left:27px solid #fff;border-top:17px solid transparent;
+  border-bottom:17px solid transparent;margin-left:9px}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.035)}}
+.boot-in h3{margin:0 0 10px;font-size:28px;font-weight:900;color:var(--ink)}
+.boot-in p{margin:0;font-size:16.5px;color:var(--mut);font-weight:700;line-height:1.75}
+.boot-in p code{font-family:var(--mono);background:#fff;border:1px solid var(--line);border-radius:6px;
+  padding:1px 7px;font-size:14.5px;color:var(--ink2)}
+#voiceTip{margin-top:16px;font-size:15px;font-weight:800;color:var(--warm)}
+#toast{position:absolute;left:50%;bottom:118px;transform:translate(-50%,10px);z-index:30;
+  background:rgba(17,26,43,.9);color:#fff;font-size:15px;font-weight:700;padding:10px 20px;border-radius:10px;
+  opacity:0;transition:all .3s ease;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="stage">
+  <div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="mesh"></div></div>
+
+  <div id="hud">
+    <div class="brand"><span class="mark"></span>短剧制作帮手<code>小白版讲解</code></div>
+    <div id="counter"><span id="chapterName">封面</span><span id="cnum">01 / 11</span></div>
+  </div>
+
+  <div id="scenes">
+
+    <!-- ============ 1 封面 ============ -->
+    <section class="scene cover" data-title="封面" data-dur="10"
+      data-cues='["这是一个能帮你把故事，变成短剧视频的帮手。","你不用懂技术，也不用会剪辑，说一句话就能开始。"]'>
+      <div class="sc-body center">
+        <div class="anim" style="--d:.05s;font-size:14.5px;font-weight:900;letter-spacing:1.6px;color:#ff7a45">给不懂技术的你 · 三分钟看懂</div>
+        <h1 class="zoom" style="--d:.14s">你出故事，<br><span class="grad">它出片子</span></h1>
+        <p class="anim sub" style="--d:.32s">一个能听懂你说话的短剧制作帮手 —— 会写、会画、会做、会交片</p>
+        <div class="anim row" style="--d:.48s">
+          <span class="chip">你说故事</span><span class="ar">›</span>
+          <span class="chip">它写成剧本</span><span class="ar">›</span>
+          <span class="chip">它备好素材</span><span class="ar">›</span>
+          <span class="chip hi">它做出视频</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2 它是什么 ============ -->
+    <section class="scene" data-title="它到底是个什么" data-dur="13"
+      data-cues='["你可以把它想象成一个随叫随到的小剧组。","编剧、美工、制片，都装在这一个帮手里 —— 你负责讲故事，剩下的活它替你干。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第一件事</div>
+        <h2 class="anim" style="--d:.08s">它到底是个什么东西</h2>
+        <div class="roles">
+          <div class="role anim" style="--d:.2s"><div class="avatar av1">编</div>
+            <div class="rt">会写故事</div><div class="rd">你只给一个想法，它帮你把整个故事写完整</div></div>
+          <div class="role anim" style="--d:.32s"><div class="avatar av2">画</div>
+            <div class="rt">会准备素材</div><div class="rd">人物长什么样、场景在哪，它自己去找、去画</div></div>
+          <div class="role anim" style="--d:.44s"><div class="avatar av3">制</div>
+            <div class="rt">会盯着做完</div><div class="rd">帮你把片子做出来，盯着进度，交到你手上</div></div>
+        </div>
+        <p class="note anim" style="--d:.6s">说白了：<b style="color:var(--ink)">它就是一个「说人话就能用」的短剧制作小组</b>，不用你去学任何工具。</p>
+      </div>
+    </section>
+
+    <!-- ============ 3 能帮你做五件事 ============ -->
+    <section class="scene" data-title="它能帮你做的五件事" data-dur="20" data-seq="nitem"
+      data-cues='["具体一点，它能帮你做五件事。","第一，把故事写完整；第二，拆成一集一集；第三，把人物和场景准备好。","第四，写清楚每一集怎么拍；第五，送去出片，盯进度，把片子拿回来。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第二件事</div>
+        <h2 class="anim" style="--d:.08s">它能帮你做<em>五件事</em></h2>
+        <div class="nlist">
+          <div class="nitem anim" style="--d:.2s"><span class="num">1</span>
+            <span><span class="nt">把故事写完整</span><span class="nd">你哪怕只有一句想法，它也能扩写成有情节、有对话的完整故事</span></span></div>
+          <div class="nitem anim" style="--d:.3s"><span class="num">2</span>
+            <span><span class="nt">拆成一集一集</span><span class="nd">长故事拆成一段段十几秒的小片段，每段都讲清一个小情节</span></span></div>
+          <div class="nitem anim" style="--d:.4s"><span class="num">3</span>
+            <span><span class="nt">把人物和场景准备好</span><span class="nd">先在素材库找现成的，找不到就照着画出来，保证前后长一个样</span></span></div>
+          <div class="nitem anim" style="--d:.5s"><span class="num">4</span>
+            <span><span class="nt">写清楚每一集怎么拍</span><span class="nd">镜头怎么走、人物说什么、什么声音，全部替你交代明白</span></span></div>
+          <div class="nitem anim" style="--d:.6s"><span class="num">5</span>
+            <span><span class="nt">送去出片，帮你盯到底</span><span class="nd">提交、排队、等进度、把做好的片子下载回来，都它管</span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4 怎么用（四步） ============ -->
+    <section class="scene" data-title="怎么用：四步" data-dur="20"
+      data-cues='["用起来只有四步，你唯一需要做的就是会说话。","第一步，告诉它你想拍什么，一句话就够。","第二步，回答它几个问题；第三步，看一眼它准备的东西，满意就说可以。","第四步，它会先告诉你大概花多少钱、等多久，你点头，它才动手。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第三件事</div>
+        <h2 class="anim" style="--d:.08s">怎么用？<em>就四步</em></h2>
+        <div class="steps">
+          <div class="step s1 anim" style="--d:.2s"><span class="sn">01</span>
+            <div class="st">说出你想拍什么</div>
+            <div class="sd">一句话就行。不用写大纲，不用想结构，它听不懂会反过来问你。</div></div>
+          <div class="step s2 anim" style="--d:.3s"><span class="sn">02</span>
+            <div class="st">回答它几个问题</div>
+            <div class="sd">比如大概几集、要什么感觉、人物用哪个样子。选项它会摆给你挑。</div></div>
+          <div class="step s3 anim" style="--d:.4s"><span class="sn">03</span>
+            <div class="st">看一眼它准备的东西</div>
+            <div class="sd">故事、分集、要用的图，都会先给你过目。满意就说「可以」。</div></div>
+          <div class="step s4 anim" style="--d:.5s"><span class="sn">04</span>
+            <div class="st">点头，它开始做</div>
+            <div class="sd">动手前它会告诉你大概花多少钱、等多久。你同意，它才去做。</div></div>
+        </div>
+        <div class="bubble anim" style="--d:.66s">
+          <span class="who">你只要说</span>
+          <span class="say">我想拍一个关于……的短剧</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5 它不会自作主张 ============ -->
+    <section class="scene" data-title="它不会自作主张" data-dur="17"
+      data-cues='["这一点最让人放心：它不会自作主张。","每做一件事之前，它都会先问过你、先给你看一遍，你说行，它才往下走。","要花钱的地方更是这样，绝不会偷偷替你决定。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第四件事</div>
+        <h2 class="anim" style="--d:.08s">最让人放心的一点：<em>它不自作主张</em></h2>
+        <div class="aprom">
+          <div class="ap anim" style="--d:.2s"><div class="at">要先问你</div>
+            <div class="ad">拿不准的地方它会直接问，不替你做决定、不自己猜</div></div>
+          <div class="ap anim" style="--d:.32s"><div class="at">要先给你看</div>
+            <div class="ad">每一小步做完都先摆给你看，不满意就改，改到你点头为止</div></div>
+          <div class="ap anim" style="--d:.44s"><div class="at">要先等你同意</div>
+            <div class="ad">要花钱的地方一定先说清楚，你点了头它才真的动手</div></div>
+        </div>
+        <div class="stamp anim" style="--d:.6s">
+          <span class="dot"></span>
+          <span>它不会偷偷动手，也不会偷偷花钱</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6 你只需要做三件事 ============ -->
+    <section class="scene" data-title="你只需要做三件事" data-dur="13"
+      data-cues='["整条流程里，你真正要动手的只有三件事。","选一选：挑风格、挑人物形象；看一看：故事和图片对不对；点个头：同意花钱、同意开做。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第五件事</div>
+        <h2 class="anim" style="--d:.08s">整个过程中，你只需要做<em>三件事</em></h2>
+        <div class="acts">
+          <div class="act anim" style="--d:.2s"><div class="glyph gl1">选</div>
+            <div class="an">选一选</div><div class="ad">挑风格、挑人物样子<br>选项它给你列好</div></div>
+          <div class="act anim" style="--d:.34s"><div class="glyph gl2">看</div>
+            <div class="an">看一看</div><div class="ad">故事对不对、图片像不像<br>你说了算</div></div>
+          <div class="act anim" style="--d:.48s"><div class="glyph gl3">定</div>
+            <div class="an">点个头</div><div class="ad">同意花钱、同意开做<br>你说停就停</div></div>
+        </div>
+        <p class="note anim" style="--d:.64s">没有第四件事了 —— 不用你写东西、不用你操作软件、不用你等在那儿盯。</p>
+      </div>
+    </section>
+
+    <!-- ============ 7 要花多久花多少 ============ -->
+    <section class="scene" data-title="大概要花多久和多少钱" data-dur="15"
+      data-cues='["时间上，一小段十几秒的片子，通常几分钟到十几分钟就能出来，它还能同时做上几段。","费用上，动手之前它会先报给你，你同意才扣钱，中途想停随时可以停。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第六件事</div>
+        <h2 class="anim" style="--d:.08s">大概要等多久、花多少？</h2>
+        <div class="stats">
+          <div class="stat anim" style="--d:.2s"><div class="sv">几分钟到十几分钟</div>
+            <div class="sl">一小段十几秒的片子<br>出来大概要这么久</div></div>
+          <div class="stat anim" style="--d:.34s"><div class="sv">先报价，后扣费</div>
+            <div class="sl">动手前先告诉你大概多少钱<br>你同意了才开始花钱</div></div>
+          <div class="stat anim" style="--d:.48s"><div class="sv">随时可以停</div>
+            <div class="sl">不满意就改、就重做<br>不用勉强接受</div></div>
+        </div>
+        <p class="note anim" style="--d:.64s">多个小片段可以一起做，所以一整集做下来，时间不会一段段叠加那么久。</p>
+      </div>
+    </section>
+
+    <!-- ============ 8 什么时候它会停下来找你 ============ -->
+    <section class="scene" data-title="什么时候它会来找你" data-dur="16"
+      data-cues='["有三种情况，它会主动停下来找你确认。","第一种，你没说清是已经写好的剧本，还是只有一个想法。","第二种，同一个人物有好几个版本，得你来挑一个。","第三种，它发现人物的画风和背景对不上，会提前提醒你可能不好看。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第七件事</div>
+        <h2 class="anim" style="--d:.08s">这几种情况，它会<em>主动来找你</em></h2>
+        <div class="sits">
+          <div class="sit anim" style="--d:.2s"><div class="sh">你说得不够清楚</div>
+            <div class="sb">它会问一句：这是已经写好的剧本，还是只有一个想法？不会自己瞎猜。</div></div>
+          <div class="sit anim" style="--d:.32s"><div class="sh">人物有几个版本</div>
+            <div class="sb">同一个角色可能存在好几种造型，它会摆出来让你挑，挑好才往下做。</div></div>
+          <div class="sit anim" style="--d:.44s"><div class="sh">画风对不上</div>
+            <div class="sb">发现人物和背景像两套画风，它会提前提醒你「这样做出来可能不好看」。</div></div>
+        </div>
+        <p class="note anim" style="--d:.62s">它宁可停下来问你一句，也不会闷头做一条你不满意的片子。</p>
+      </div>
+    </section>
+
+    <!-- ============ 9 什么情况适合用 ============ -->
+    <section class="scene" data-title="什么情况适合用" data-dur="14"
+      data-cues='["那什么情况适合用它呢？心里有个故事想拍成短剧，或者想一次做一整个系列，都很合适。","有一点要注意：它一次只能做十几秒的小片段，故事长就得拆成很多集。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第八件事</div>
+        <h2 class="anim" style="--d:.08s">什么情况适合用它</h2>
+        <div class="fit">
+          <div class="fitbox yes anim" style="--d:.2s">
+            <div class="fh"><span class="bul">✓</span>很适合</div>
+            <div class="fitem"><span class="bul">·</span>心里有个故事、段子或脑洞，想拍成短剧看看效果</div>
+            <div class="fitem"><span class="bul">·</span>想一次做一整个系列，让每集的人物前后长一个样</div>
+            <div class="fitem"><span class="bul">·</span>想要一集一集的短视频，发到手机上给人看</div>
+          </div>
+          <div class="fitbox no anim" style="--d:.34s">
+            <div class="fh"><span class="bul">!</span>要注意</div>
+            <div class="fitem"><span class="bul">·</span>它一次只做十几秒的小片段，故事长就得拆成很多集</div>
+            <div class="fitem"><span class="bul">·</span>它做的是「从故事做新片子」，不是帮你剪现成的视频</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10 你完全不用会这些 ============ -->
+    <section class="scene" data-title="你完全不用会这些" data-dur="14" data-seq="nn"
+      data-cues='["最后想说一句：下面这些东西，你完全不用会。","不用会写复杂指令，不用懂技术参数，不用会剪辑，也不用了解背后的模型。","这些它全替你办了，你只管讲故事。"]'>
+      <div class="sc-body">
+        <div class="kicker anim">第九件事</div>
+        <h2 class="anim" style="--d:.08s">这些，你<em>完全不用会</em></h2>
+        <div class="noNeed">
+          <div class="nn anim" style="--d:.2s"><span class="x">✕</span><span class="t">不用会写复杂的指令</span>
+            <span class="by">它替你写</span></div>
+          <div class="nn anim" style="--d:.3s"><span class="x">✕</span><span class="t">不用懂任何技术参数</span>
+            <span class="by">它替你定</span></div>
+          <div class="nn anim" style="--d:.4s"><span class="x">✕</span><span class="t">不用会剪辑、会做特效</span>
+            <span class="by">它替你做</span></div>
+          <div class="nn anim" style="--d:.5s"><span class="x">✕</span><span class="t">不用了解背后用了什么模型</span>
+            <span class="by">它替你选</span></div>
+        </div>
+        <p class="note anim" style="--d:.66s">你要做的，就是把脑子里那个故事讲出来。</p>
+      </div>
+    </section>
+
+    <!-- ============ 11 总结与开始 ============ -->
+    <section class="scene" data-title="现在就可以开始" data-dur="11"
+      data-cues='["总结一句话：你出故事，它出片子。","现在就可以开始 —— 直接对它说：我想拍一个关于什么的短剧。"]'>
+      <div class="sc-body center">
+        <h2 class="bigline zoom" style="--d:.1s;text-align:center">你出故事，<em>它出片子</em></h2>
+        <div class="example anim" style="--d:.34s">
+          <span class="who">你只要说</span>
+          <span class="txt">我想拍一个关于……的短剧</span>
+        </div>
+        <p class="anim sub" style="--d:.52s;margin-top:26px;font-size:18px;color:var(--mut);font-weight:700">
+          剩下的它会一步步问你 —— 你只需要选一选、看一看、点个头。</p>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="subs"><div id="subtext"></div></div>
+  <div id="hint">空格 播放/暂停　← → 翻页　F 全屏</div>
+
+  <div id="player">
+    <div id="ticks"></div>
+    <div id="bar"><div id="barfill"></div></div>
+    <div id="ctrls">
+      <button class="btn" id="bPrev" title="上一页">⏮</button>
+      <button class="btn pri" id="bPlay" title="播放 / 暂停"><span class="ic">▶</span> 播放</button>
+      <button class="btn" id="bNext" title="下一页">⏭</button>
+      <button class="btn" id="bReset" title="从头播放">↺</button>
+      <span id="time">00:00 / 00:00</span>
+      <span class="spacer"></span>
+      <button class="btn" id="bVoice" title="语音讲解开关">🔊 语音</button>
+      <button class="btn" id="bSub" title="字幕开关">CC</button>
+      <button class="btn" id="bRate" title="播放速度">1.0×</button>
+      <button class="btn" id="bFull" title="全屏">⛶</button>
+    </div>
+  </div>
+
+  <div id="boot">
+    <div class="boot-in">
+      <div class="play"></div>
+      <h3>点击开始看</h3>
+      <p>共 11 页 · 约 <span id="totalTip">3 分钟</span>　·　用最直白的话，讲清这个帮手能干什么、你该怎么用<br>
+      看到一半能随时停，<code>空格</code> 暂停、<code>←</code> <code>→</code> 翻页，想重看按 <code>R</code></p>
+      <div id="voiceTip">🔊 已打开语音讲解</div>
+    </div>
+  </div>
+  <div id="toast"></div>
+</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var stage = document.getElementById('stage');
+  function fit(){
+    var s = Math.min((window.innerWidth - 28) / 1280, (window.innerHeight - 28) / 720);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  /* ---------- scene engine ---------- */
+  var scenes = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+  var ticks   = document.getElementById('ticks');
+  var barfill = document.getElementById('barfill');
+  var subtext = document.getElementById('subtext');
+  var subsBox = document.getElementById('subs');
+  var timeEl  = document.getElementById('time');
+  var chName  = document.getElementById('chapterName');
+  var cnum    = document.getElementById('cnum');
+  var toastEl = document.getElementById('toast');
+
+  var UNIT_MS = 250;   // 中文字符预估语速
+  var PAD_MS  = 1300;
+
+  function units(str){
+    var u = 0;
+    for (var i = 0; i < str.length; i++){
+      var c = str.charCodeAt(i);
+      u += (c > 0x2e80 && c < 0xa000) ? 1 : 0.55;
+    }
+    return u;
+  }
+
+  var meta = scenes.map(function(sc){
+    var cues = [];
+    try { cues = JSON.parse(sc.getAttribute('data-cues') || '[]'); } catch(e){ cues = []; }
+    var base = parseFloat(sc.getAttribute('data-dur') || '12') * 1000;
+    var total = cues.reduce(function(a, c){ return a + units(c); }, 0);
+    var est = total * UNIT_MS + PAD_MS + Math.max(0, cues.length - 1) * 350;
+    var dur = Math.max(base, est);
+
+    var segs = [], t = 0, sumU = total || 1;
+    cues.forEach(function(c){
+      var share = (units(c) / sumU) * (dur - PAD_MS * 0.55);
+      segs.push({ text: c, start: t, end: t + share });
+      t += share + 350;
+    });
+    if (!segs.length) segs = [{ text: sc.getAttribute('data-title') || '', start: 0, end: dur }];
+    return { el: sc, dur: dur, cues: cues, segs: segs, title: sc.getAttribute('data-title') || '' };
+  });
+
+  var totalMs = meta.reduce(function(a, m){ return a + m.dur; }, 0);
+
+  meta.forEach(function(m, i){
+    var d = document.createElement('div');
+    d.className = 'tk'; d.title = (i + 1) + '. ' + m.title;
+    d.style.flexGrow = String(m.dur);
+    d.addEventListener('click', function(){ go(i); });
+    ticks.appendChild(d);
+  });
+  var tks = Array.prototype.slice.call(ticks.children);
+
+  var idx = 0, inScene = 0, playing = false, rate = 1;
+  var last = 0, rafId = 0, seqTimer = 0, curSeg = -1, started = false;
+
+  function fmt(ms){
+    ms = Math.max(0, ms);
+    var s = Math.floor(ms / 1000), m = Math.floor(s / 60);
+    return ('0' + m).slice(-2) + ':' + ('0' + (s % 60)).slice(-2);
+  }
+  function elapsedGlobal(){
+    var e = 0;
+    for (var i = 0; i < idx; i++) e += meta[i].dur;
+    return e + inScene;
+  }
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(function(){ toastEl.classList.remove('show'); }, 1900);
+  }
+
+  /* ---------- 语音 ---------- */
+  var voiceOn = false, zhVoice = null, voicesReady = false;
+
+  function pickVoice(){
+    if (!('speechSynthesis' in window)) return null;
+    var vs = window.speechSynthesis.getVoices() || [];
+    if (!vs.length) return null;
+    var v = vs.filter(function(x){ return /^zh[-_]?(CN|Hans)/i.test(x.lang); })[0]
+         || vs.filter(function(x){ return /^zh/i.test(x.lang); })[0];
+    voicesReady = true;
+    return v || null;
+  }
+  if ('speechSynthesis' in window){
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = function(){ zhVoice = pickVoice() || zhVoice; };
+  }
+  function speak(text){
+    if (!voiceOn || !('speechSynthesis' in window) || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';
+      if (zhVoice) u.voice = zhVoice;
+      u.rate = 0.98; u.pitch = 1;
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function stopSpeech(){ try { window.speechSynthesis.cancel(); } catch(e){} }
+  function pauseSpeech(){ if (voiceOn && 'speechSynthesis' in window) { try { window.speechSynthesis.pause(); } catch(e){} } }
+  function resumeSpeech(){ if (voiceOn && 'speechSynthesis' in window) { try { window.speechSynthesis.resume(); } catch(e){} } }
+
+  /* ---------- 顺序点亮 ---------- */
+  function runSeq(m){
+    clearInterval(seqTimer);
+    var key = m.el.getAttribute('data-seq');
+    if (!key) return;
+    var items = Array.prototype.slice.call(m.el.querySelectorAll('.' + key));
+    if (!items.length) return;
+    items.forEach(function(n, i){ n.style.transitionDelay = (i * 0.2) + 's'; });
+    var step = Math.max(300, (m.dur - 1800) / items.length);
+    var i = 0;
+    var kick = function(){
+      if (i >= items.length) { clearInterval(seqTimer); return; }
+      items[i].classList.add('lit'); i++;
+    };
+    setTimeout(kick, 900);
+    seqTimer = setInterval(kick, step);
+  }
+  function resetSeq(m){
+    clearInterval(seqTimer);
+    var key = m.el.getAttribute('data-seq');
+    if (!key) return;
+    Array.prototype.slice.call(m.el.querySelectorAll('.' + key)).forEach(function(n){
+      n.classList.remove('lit'); n.style.transitionDelay = '0s';
+    });
+  }
+
+  function enter(i, keepSpeech){
+    meta.forEach(function(m, k){
+      m.el.classList.toggle('active', k === i);
+      if (k !== i) resetSeq(m);
+    });
+    var m = meta[i];
+    curSeg = -1; inScene = 0;
+    chName.textContent = m.title;
+    cnum.textContent = ('0' + (i + 1)).slice(-2) + ' / ' + meta.length;
+    tks.forEach(function(t, k){
+      t.classList.toggle('on', k === i);
+      t.classList.toggle('done', k < i);
+    });
+    if (!keepSpeech) speak(m.cues.join(''));
+    setTimeout(function(){ if (idx === i) runSeq(m); }, 60);
+  }
+
+  function go(i){
+    i = Math.max(0, Math.min(meta.length - 1, i));
+    idx = i; enter(i); paint();
+  }
+  function next(){
+    if (idx >= meta.length - 1){ pause(); inScene = meta[idx].dur; paint(); return; }
+    go(idx + 1);
+  }
+  function prev(){
+    if (inScene > 1200){ inScene = 0; paint(); return; }
+    go(idx - 1);
+  }
+
+  function paint(){
+    var g = Math.min(totalMs, elapsedGlobal());
+    barfill.style.width = (g / totalMs * 100) + '%';
+    timeEl.textContent = fmt(g) + ' / ' + fmt(totalMs);
+
+    var m = meta[idx], seg = null;
+    for (var i = 0; i < m.segs.length; i++){
+      if (inScene >= m.segs[i].start && inScene < m.segs[i].end) { seg = i; break; }
+    }
+    if (seg === null) seg = inScene < m.segs[0].start ? -1 : m.segs.length - 1;
+    if (seg !== curSeg){
+      curSeg = seg;
+      if (seg < 0){ subtext.classList.remove('show'); }
+      else { subtext.textContent = m.segs[seg].text; subtext.classList.add('show'); }
+    }
+  }
+
+  function frame(now){
+    if (!playing) return;
+    var dt = Math.min(120, now - last); last = now;
+    inScene += dt * rate;
+    var m = meta[idx];
+    if (inScene >= m.dur){
+      if (idx < meta.length - 1){ idx += 1; enter(idx); }
+      else { inScene = m.dur; paint(); pause(); return; }
+    }
+    paint();
+    rafId = requestAnimationFrame(frame);
+  }
+  function play(){
+    if (playing) return;
+    if (idx === meta.length - 1 && inScene >= meta[idx].dur - 10) go(0);
+    playing = true; last = performance.now();
+    document.getElementById('bPlay').innerHTML = '<span class="ic">❚❚</span> 暂停';
+    resumeSpeech();
+    rafId = requestAnimationFrame(frame);
+  }
+  function pause(){
+    playing = false; cancelAnimationFrame(rafId);
+    document.getElementById('bPlay').innerHTML = '<span class="ic">▶</span> 播放';
+    pauseSpeech();
+  }
+  function toggle(){ playing ? pause() : play(); }
+
+  document.getElementById('bPlay').addEventListener('click', toggle);
+  document.getElementById('bNext').addEventListener('click', next);
+  document.getElementById('bPrev').addEventListener('click', prev);
+  document.getElementById('bReset').addEventListener('click', function(){ stopSpeech(); go(0); play(); });
+
+  var bSub = document.getElementById('bSub');
+  bSub.classList.add('on');
+  bSub.addEventListener('click', function(){
+    subsBox.classList.toggle('off');
+    bSub.classList.toggle('on', !subsBox.classList.contains('off'));
+  });
+
+  var bVoice = document.getElementById('bVoice');
+  bVoice.addEventListener('click', function(){
+    if (!('speechSynthesis' in window)){ toast('这台设备不支持语音，看字幕也一样'); return; }
+    voiceOn = !voiceOn;
+    bVoice.classList.toggle('on', voiceOn);
+    if (voiceOn){
+      zhVoice = zhVoice || pickVoice();
+      if (!zhVoice && voicesReady){ toast('没找到中文语音，看字幕就行'); voiceOn = false; bVoice.classList.remove('on'); return; }
+      toast('语音讲解已打开');
+      speak(meta[idx].cues.join(''));
+    } else { stopSpeech(); toast('语音讲解已关闭'); }
+  });
+
+  var rates = [1, 1.25, 1.5, 2], ri = 0;
+  var rateLabels = ['1.0×', '1.25×', '1.5×', '2.0×'];
+  var bRate = document.getElementById('bRate');
+  bRate.addEventListener('click', function(){
+    ri = (ri + 1) % rates.length;
+    rate = rates[ri]; bRate.textContent = rateLabels[ri];
+    bRate.classList.toggle('on', ri > 0);
+  });
+
+  var bFull = document.getElementById('bFull');
+  bFull.addEventListener('click', function(){
+    var d = document.documentElement;
+    if (!document.fullscreenElement){ (d.requestFullscreen || function(){}).call(d); }
+    else { document.exitFullscreen(); }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.code === 'Space'){ e.preventDefault(); toggle(); }
+    else if (e.key === 'ArrowRight'){ e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft'){ e.preventDefault(); prev(); }
+    else if (e.key === 'f' || e.key === 'F'){ bFull.click(); }
+    else if (e.key === 'r' || e.key === 'R'){ stopSpeech(); go(0); play(); }
+  });
+
+  var boot = document.getElementById('boot');
+  document.getElementById('totalTip').textContent = Math.round(totalMs / 60000 * 10) / 10 + ' 分钟';
+
+  function start(){
+    if (started) return;
+    started = true;
+    boot.classList.add('hide');
+    document.getElementById('hint').classList.add('gone');
+    var tip = document.getElementById('voiceTip');
+    if ('speechSynthesis' in window){
+      zhVoice = zhVoice || pickVoice();
+      if (zhVoice){ voiceOn = true; bVoice.classList.add('on'); tip.textContent = '🔊 已打开语音讲解'; }
+      else { tip.textContent = '现在是字幕讲解（没找到中文语音，不影响观看）'; }
+    } else { tip.textContent = '现在是字幕讲解（这台设备不支持语音）'; }
+    enter(0); paint(); play();
+  }
+  boot.addEventListener('click', start);
+
+  enter(0);
+  paint();
+  window.__h3 = { meta: meta, totalMs: totalMs, go: go, play: play, pause: pause };
+})();
+</script>
+</body>
+</html>

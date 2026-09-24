@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>H3 视频复刻 · 两分钟看懂</title>
+<style>
+  :root{
+    --bg:#05060d;
+    --ink:#f5f7ff;
+    --ink-2:#a9b2cc;
+    --ink-3:#7b849f;
+    --line:rgba(255,255,255,.14);
+    --accent:#5eead4;
+    --accent-2:#f7c25c;
+    --accent-3:#93a6ff;
+    --panel:rgba(255,255,255,.055);
+    --panel-2:rgba(255,255,255,.09);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    height:100%;margin:0;background:#03040a;color:var(--ink);
+    font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC","Noto Sans SC","Segoe UI",system-ui,sans-serif;
+    overflow:hidden;
+  }
+  body{display:flex;align-items:center;justify-content:center;}
+  button{font-family:inherit;color:inherit;cursor:pointer;}
+
+  /* ---------- 舞台 ---------- */
+  #stage{
+    position:relative;width:1280px;height:720px;flex:none;
+    background:
+      radial-gradient(1100px 620px at 12% -10%, rgba(94,234,212,.16), transparent 62%),
+      radial-gradient(900px 600px at 96% 108%, rgba(147,166,255,.20), transparent 60%),
+      radial-gradient(700px 500px at 78% 6%, rgba(247,194,92,.10), transparent 62%),
+      linear-gradient(160deg,#070b18 0%,#05060d 55%,#04060f 100%);
+    border-radius:22px;overflow:hidden;
+    box-shadow:0 40px 120px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.06);
+    transform-origin:center center;
+    user-select:none;
+  }
+  #stage::after{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+    background:radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%);
+  }
+  .grid-lines{
+    position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.28;
+    background-image:linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+                     linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(80% 70% at 50% 40%, #000 30%, transparent 100%);
+    -webkit-mask-image:radial-gradient(80% 70% at 50% 40%, #000 30%, transparent 100%);
+  }
+  .orb{
+    position:absolute;z-index:0;border-radius:50%;filter:blur(50px);opacity:.55;pointer-events:none;
+    animation:drift 18s ease-in-out infinite alternate;
+  }
+  .orb.a{width:420px;height:420px;left:-90px;top:-120px;background:rgba(94,234,212,.34);}
+  .orb.b{width:520px;height:520px;right:-140px;bottom:-180px;background:rgba(147,166,255,.32);animation-delay:-6s;}
+  .orb.c{width:280px;height:280px;right:22%;top:-120px;background:rgba(247,194,92,.22);animation-delay:-11s;}
+  @keyframes drift{from{transform:translate3d(0,0,0) scale(1);}to{transform:translate3d(30px,26px,0) scale(1.08);}}
+
+  /* ---------- 场景 ---------- */
+  .scene{
+    position:absolute;inset:0;z-index:2;
+    display:flex;flex-direction:column;justify-content:center;
+    gap:20px;padding:62px 96px 202px;
+    opacity:0;visibility:hidden;
+    transition:opacity .5s ease, transform .5s ease;
+    transform:scale(.995);
+  }
+  .scene.on{opacity:1;visibility:visible;transform:none;}
+  .anim{
+    opacity:0;transform:translateY(20px);
+    transition:opacity .62s cubic-bezier(.2,.7,.2,1), transform .62s cubic-bezier(.2,.7,.2,1);
+    transition-delay:var(--d,0ms);
+  }
+  .scene.on .anim{opacity:1;transform:none;}
+  #stage.instant .scene{transition:none;}
+  #stage.instant .anim{opacity:1 !important;transform:none !important;transition:none !important;}
+
+  /* ---------- 排版 ---------- */
+  .kicker{
+    display:inline-flex;align-items:center;gap:10px;align-self:flex-start;
+    padding:9px 18px;border-radius:999px;
+    background:rgba(94,234,212,.12);border:1px solid rgba(94,234,212,.35);
+    color:#bff8ec;font-size:20px;letter-spacing:.06em;
+  }
+  .kicker.warm{background:rgba(247,194,92,.12);border-color:rgba(247,194,92,.38);color:#ffe3ad;}
+  .h-display{font-size:78px;line-height:1.12;margin:0;font-weight:700;letter-spacing:.01em;}
+  .h2{font-size:46px;line-height:1.24;margin:0;font-weight:700;}
+  .h3{font-size:34px;line-height:1.3;margin:0;font-weight:700;}
+  .lead{font-size:26px;line-height:1.5;margin:0;color:var(--ink-2);}
+  .lead.big{font-size:30px;color:#dbe2f5;}
+  .muted{color:var(--ink-3);}
+  .grad{
+    background:linear-gradient(100deg,#5eead4 0%,#93a6ff 55%,#f7c25c 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hl{color:#bff8ec;}
+  .hl2{color:#ffe3ad;}
+  .row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .stack{display:flex;flex-direction:column;gap:14px;}
+
+  /* ---------- 通用小元件 ---------- */
+  .chip{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:11px 18px;border-radius:13px;font-size:22px;
+    background:var(--panel);border:1px solid var(--line);color:#dde4f6;
+  }
+  .chip.accent{background:rgba(94,234,212,.14);border-color:rgba(94,234,212,.4);color:#c9fdf1;}
+  .chip.warm{background:rgba(247,194,92,.14);border-color:rgba(247,194,92,.4);color:#ffe6b6;}
+  .dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none;}
+
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    padding:20px 22px;display:flex;flex-direction:column;gap:10px;
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+  }
+  .card .ct{font-size:24px;font-weight:700;color:#f2f5ff;line-height:1.3;}
+  .card .cd{font-size:19px;line-height:1.5;color:var(--ink-2);}
+  .card .tag{font-size:18px;color:var(--ink-3);letter-spacing:.08em;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+
+  /* 封面胶片 */
+  .filmstrip{display:flex;gap:10px;margin-top:6px;}
+  .frame{
+    width:106px;height:76px;border-radius:10px;border:1px solid rgba(255,255,255,.16);
+    background:linear-gradient(150deg, rgba(94,234,212,.30), rgba(147,166,255,.26));
+    position:relative;
+  }
+  .frame::after{
+    content:"";position:absolute;left:10px;bottom:9px;width:38px;height:6px;border-radius:3px;
+    background:rgba(255,255,255,.5);
+  }
+  .frame:nth-child(2n){background:linear-gradient(150deg, rgba(147,166,255,.32), rgba(247,194,92,.24));}
+  .frame:nth-child(3n){background:linear-gradient(150deg, rgba(247,194,92,.30), rgba(94,234,212,.22));}
+  .frame .fno{
+    position:absolute;right:9px;top:7px;font-size:15px;color:rgba(255,255,255,.72);
+  }
+
+  /* 痛点问号 */
+  .pain-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;}
+  .pain{
+    display:flex;align-items:center;gap:14px;padding:16px 22px;border-radius:16px;
+    background:var(--panel);border:1px dashed rgba(255,255,255,.22);
+    font-size:25px;color:#e2e8f8;
+  }
+  .pain .q{
+    width:38px;height:38px;flex:none;border-radius:50%;
+    display:grid;place-items:center;font-size:23px;font-weight:700;
+    background:rgba(247,194,92,.18);border:1px solid rgba(247,194,92,.45);color:#ffe0a3;
+  }
+
+  /* 流程箭头 */
+  .flow{display:flex;align-items:center;gap:20px;flex-wrap:nowrap;}
+  .flow .box{
+    flex:1;min-width:0;padding:26px 24px;border-radius:18px;text-align:center;
+    background:var(--panel);border:1px solid var(--line);font-size:25px;color:#e6ebfa;line-height:1.4;
+  }
+  .flow .box.accent{background:rgba(94,234,212,.14);border-color:rgba(94,234,212,.42);color:#d3fdf3;}
+  .flow .arw{font-size:34px;color:var(--ink-3);flex:none;}
+
+  /* 关卡 */
+  .gates{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .gate{
+    position:relative;padding:24px 22px 22px;border-radius:18px;
+    background:var(--panel);border:1px solid var(--line);
+  }
+  .gate .gnum{
+    position:absolute;top:-16px;left:22px;width:40px;height:40px;border-radius:50%;
+    display:grid;place-items:center;font-size:21px;font-weight:700;
+    background:linear-gradient(150deg,#5eead4,#93a6ff);color:#04121a;
+  }
+  .gate .gt{font-size:26px;font-weight:700;margin-top:12px;color:#f2f5ff;}
+  .gate .gd{font-size:21px;line-height:1.5;color:var(--ink-2);margin-top:8px;}
+  .gate .check{margin-top:14px;font-size:20px;color:#bfe9df;}
+
+  /* 步骤 */
+  .steps{display:flex;flex-direction:column;gap:16px;}
+  .step{display:flex;align-items:flex-start;gap:18px;}
+  .step .sn{
+    width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center;
+    font-size:22px;font-weight:700;background:rgba(94,234,212,.16);
+    border:1px solid rgba(94,234,212,.42);color:#c8fdf1;
+  }
+  .step .st{font-size:26px;color:#eaf0ff;line-height:1.45;}
+  .step .ss{font-size:21px;color:var(--ink-3);line-height:1.5;margin-top:5px;}
+
+  /* 分段条 */
+  .longbar{display:flex;flex-direction:column;gap:14px;margin-top:2px;}
+  .segrow{display:flex;gap:10px;}
+  .seg{
+    flex:1;height:64px;border-radius:12px;position:relative;
+    background:rgba(147,166,255,.20);border:1px solid rgba(147,166,255,.4);
+    display:grid;place-items:center;font-size:19px;color:#dbe3ff;
+  }
+  .seglabel{font-size:21px;color:var(--ink-3);}
+  .plus{display:grid;place-items:center;font-size:30px;color:var(--ink-3);}
+  .finalbar{
+    height:64px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#04121a;font-weight:700;
+    background:linear-gradient(100deg,#5eead4,#93a6ff 70%,#f7c25c);
+  }
+
+  /* 结尾 */
+  .endwrap{display:flex;flex-direction:column;gap:26px;}
+  .cta{
+    align-self:flex-start;padding:20px 30px;border-radius:16px;font-size:28px;color:#04121a;font-weight:700;
+    background:linear-gradient(100deg,#5eead4,#93a6ff 60%,#f7c25c);
+  }
+
+  /* ---------- HUD ---------- */
+  .hud{position:absolute;inset:0;z-index:7;pointer-events:none;}
+  .hud-top{
+    position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+    padding:24px 34px 0;pointer-events:none;
+  }
+  .brandmark{display:flex;align-items:center;gap:12px;font-size:20px;color:rgba(255,255,255,.72);letter-spacing:.06em;}
+  .brandmark .lg{
+    width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;font-weight:700;
+    background:linear-gradient(150deg,#5eead4,#93a6ff);color:#04121a;
+  }
+  .counter{font-size:20px;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;}
+
+  .subs{
+    position:absolute;left:70px;right:70px;bottom:86px;z-index:7;
+    pointer-events:none;display:flex;justify-content:center;
+  }
+  .subs span{
+    width:1140px;height:106px;padding:0 22px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(4,8,18,.62);border:1px solid rgba(255,255,255,.1);
+    font-size:21px;line-height:1.4;color:#eaeffb;text-align:center;
+    box-shadow:0 12px 30px rgba(0,0,0,.45);
+  }
+
+  .controlbar{
+    position:absolute;left:0;right:0;bottom:0;z-index:8;
+    padding:8px 26px 10px;
+    background:linear-gradient(to top, rgba(3,5,12,.94), rgba(3,5,12,.55) 62%, transparent);
+  }
+  .segs{display:flex;gap:6px;margin-bottom:8px;}
+  .segs button{
+    height:14px;padding:0;border:0;background:transparent;border-radius:999px;cursor:pointer;
+    display:flex;align-items:center;
+  }
+  .segs button i{
+    display:block;width:100%;height:5px;border-radius:999px;background:rgba(255,255,255,.20);
+    position:relative;overflow:hidden;transition:height .15s ease,background .15s ease;
+  }
+  .segs button:hover i{height:8px;}
+  .segs button i b{
+    position:absolute;inset:0 auto 0 0;width:0%;border-radius:999px;
+    background:linear-gradient(90deg,#5eead4,#93a6ff);
+  }
+  .ctrls{display:flex;align-items:center;gap:10px;}
+  .cbtn{
+    border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);
+    color:#e7ecfa;border-radius:10px;padding:8px 14px;font-size:18px;
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .cbtn:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);}
+  .cbtn.primary{background:rgba(94,234,212,.18);border-color:rgba(94,234,212,.45);color:#d2fdf3;font-weight:700;}
+  .cbtn.on{background:rgba(247,194,92,.2);border-color:rgba(247,194,92,.5);color:#ffe6b6;}
+  .clock{margin-left:auto;font-size:18px;color:rgba(255,255,255,.62);font-variant-numeric:tabular-nums;}
+  .hint{
+    position:absolute;left:50%;top:38px;transform:translateX(-50%);
+    font-size:17px;color:rgba(255,255,255,.4);z-index:8;pointer-events:none;white-space:nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="grid-lines"></div>
+  <div class="orb a"></div>
+  <div class="orb b"></div>
+  <div class="orb c"></div>
+
+  <!-- 1 封面 -->
+  <section class="scene" data-narr="这是一个能把喜欢的视频，变成你自己的视频的工具。接下来两分钟，告诉你它能做什么，以及怎么用。">
+    <div class="kicker anim" style="--d:80">H3 · 视频复刻</div>
+    <h1 class="h-display anim" style="--d:240">把喜欢的视频<br><span class="grad">变成你自己的视频</span></h1>
+    <p class="lead anim" style="--d:520">你只要给它一个视频，再说一句「照这个做」。</p>
+    <div class="filmstrip anim" style="--d:700">
+      <div class="frame"><span class="fno">01</span></div>
+      <div class="frame"><span class="fno">02</span></div>
+      <div class="frame"><span class="fno">03</span></div>
+      <div class="frame"><span class="fno">04</span></div>
+      <div class="frame"><span class="fno">05</span></div>
+      <div class="frame"><span class="fno">06</span></div>
+      <div class="frame"><span class="fno">07</span></div>
+    </div>
+    <p class="lead anim" style="--d:900">两分钟看懂，不需要任何专业知识。</p>
+  </section>
+
+  <!-- 2 痛点 -->
+  <section class="scene" data-narr="很多时候，你刷到一个很喜欢的视频，想做一个同款。可是镜头怎么拍、故事怎么排、人物穿什么，一时完全没头绪。">
+    <div class="kicker warm anim" style="--d:80">是不是经常这样</div>
+    <h2 class="h2 anim" style="--d:200">刷到一个特别喜欢的视频，<br>心里想：我也要做一个「同款」</h2>
+    <div class="pain-grid">
+      <div class="pain anim" style="--d:460"><span class="q">?</span>镜头是怎么拍的？</div>
+      <div class="pain anim" style="--d:580"><span class="q">?</span>故事是怎么排的？</div>
+      <div class="pain anim" style="--d:700"><span class="q">?</span>人物穿的是什么？</div>
+      <div class="pain anim" style="--d:820"><span class="q">?</span>从哪里开始做？</div>
+    </div>
+    <p class="lead anim" style="--d:1040">看一百遍，也说不清它到底是怎么拍出来的。</p>
+  </section>
+
+  <!-- 3 一句话 -->
+  <section class="scene" data-narr="一句话说清它的作用：你给它一个视频，再说一句照这个做，它就会还你一套可以照着做的复刻方案。">
+    <div class="kicker anim" style="--d:80">一句话说清</div>
+    <h2 class="h2 anim" style="--d:200">你给它一个视频，<br>它给你一套「照着做就行」的方案</h2>
+    <div class="flow anim" style="--d:560">
+      <div class="box">你给一个视频</div>
+      <div class="arw">→</div>
+      <div class="box">它把视频看懂、拆开</div>
+      <div class="arw">→</div>
+      <div class="box accent">还你一套复刻方案</div>
+    </div>
+    <p class="lead anim" style="--d:900">方案里写得明明白白：谁、在哪儿、穿什么、怎么拍。</p>
+  </section>
+
+  <!-- 4 它怎么看懂 -->
+  <section class="scene" data-narr="它的第一步，是把视频从头到尾看一遍。就像翻连环画一样，它记下谁出场、穿了什么、在什么地方、做了什么，连镜头怎么动、画面上的文字，都会记下来。">
+    <div class="kicker anim" style="--d:80">第一步</div>
+    <h2 class="h2 anim" style="--d:180">它先把视频「看一遍」</h2>
+    <div class="filmstrip anim" style="--d:400">
+      <div class="frame"><span class="fno">1</span></div>
+      <div class="frame"><span class="fno">2</span></div>
+      <div class="frame"><span class="fno">3</span></div>
+      <div class="frame"><span class="fno">4</span></div>
+      <div class="frame"><span class="fno">5</span></div>
+      <div class="frame"><span class="fno">6</span></div>
+      <div class="frame"><span class="fno">7</span></div>
+      <div class="frame"><span class="fno">8</span></div>
+    </div>
+    <p class="lead anim" style="--d:640">像翻连环画一样，一格一格看，边看边记笔记：</p>
+    <div class="row anim" style="--d:820">
+      <span class="chip">谁出场了</span>
+      <span class="chip">穿了什么</span>
+      <span class="chip">在什么地方</span>
+      <span class="chip">做了什么动作</span>
+      <span class="chip">镜头怎么动</span>
+      <span class="chip">画面上有什么字</span>
+    </div>
+  </section>
+
+  <!-- 5 交付物 -->
+  <section class="scene" data-narr="看完之后，它交给你一本复刻说明书：把视频拆成一个一个镜头的镜头分解表，讲清整个故事的剧情大纲，一段一段的详细剧情，还有可以直接拿去出片的说明和流程。">
+    <div class="kicker anim" style="--d:80">它交给你什么</div>
+    <h2 class="h2 anim" style="--d:180">一本可以照着做的「复刻说明书」</h2>
+    <div class="grid4" style="margin-top:6px">
+      <div class="card anim" style="--d:420">
+        <div class="tag">01</div>
+        <div class="ct">镜头分解表</div>
+        <div class="cd">把视频拆成一个个镜头，每个镜头写清场景、人物、服装、动作。</div>
+      </div>
+      <div class="card anim" style="--d:560">
+        <div class="tag">02</div>
+        <div class="ct">剧情大纲</div>
+        <div class="cd">整个视频讲了一个什么故事，分成几段，每段讲什么。</div>
+      </div>
+      <div class="card anim" style="--d:700">
+        <div class="tag">03</div>
+        <div class="ct">分集剧情</div>
+        <div class="cd">每一段详细怎么拍：人物怎么出场、画面怎么走、什么时候给特写。</div>
+      </div>
+      <div class="card anim" style="--d:840">
+        <div class="tag">04</div>
+        <div class="ct">出片说明与流程</div>
+        <div class="cd">可以直接交给 AI 生成视频的说明文字，配好参数，一集一集出片。</div>
+      </div>
+    </div>
+    <p class="lead anim" style="--d:1040">都是普通文档，打开就能看，也能自己动手改。</p>
+  </section>
+
+  <!-- 6 三级审批 -->
+  <section class="scene" data-narr="整套流程最特别的地方，是它不会一口气做完。它会分成三道关卡：先给你剧情大纲，再给你每一集的剧情，最后才一集一集出成品。每一关，它都会停下来问你一句：这样可以吗？你说行，它才往下走。">
+    <div class="kicker anim" style="--d:80">最特别的地方</div>
+    <h2 class="h2 anim" style="--d:180">它不会一口气做完，<br>而是分三道关卡，一关一关问你</h2>
+    <div class="gates" style="margin-top:14px">
+      <div class="gate anim" style="--d:480">
+        <div class="gnum">1</div>
+        <div class="gt">先看剧情大纲</div>
+        <div class="gd">整个故事怎么讲，先跟你对一遍。</div>
+        <div class="check">✅ 你说行，才往下走</div>
+      </div>
+      <div class="gate anim" style="--d:640">
+        <div class="gnum">2</div>
+        <div class="gt">再看每一集的剧情</div>
+        <div class="gd">一集一集交给你，一集一集确认。</div>
+        <div class="check">✅ 你点头，才生成下一集</div>
+      </div>
+      <div class="gate anim" style="--d:800">
+        <div class="gnum">3</div>
+        <div class="gt">最后才出一集集成品</div>
+        <div class="gd">出好一集给你一集，不满意就改这一集。</div>
+        <div class="check">✅ 每一集都能单独调整</div>
+      </div>
+    </div>
+    <p class="lead big anim" style="--d:1020">每一关都会停下来问你：<span class="hl">这样可以吗？</span></p>
+  </section>
+
+  <!-- 7 怎么用 -->
+  <section class="scene" data-narr="用起来只有三步。第一步，把视频发给它，手机拍的、下载的都可以。第二步，说一句照这个视频做，然后选一种做法：一模一样照搬，换成你自己的人，或者只挑几个镜头。第三步，一关一关看，说确认，或者直接告诉它哪里要改。">
+    <div class="kicker anim" style="--d:80">怎么用</div>
+    <h2 class="h2 anim" style="--d:180">只有三步</h2>
+    <div class="steps" style="margin-top:8px">
+      <div class="step anim" style="--d:420">
+        <div class="sn">1</div>
+        <div>
+          <div class="st">把视频发给它</div>
+          <div class="ss">手机拍的、网上下载的都可以，直接拖进来或者选文件。</div>
+        </div>
+      </div>
+      <div class="step anim" style="--d:600">
+        <div class="sn">2</div>
+        <div>
+          <div class="st">说一句：「照这个视频做」</div>
+          <div class="ss">再挑一种做法：一模一样照搬 ／ 换成你自己的人物和品牌 ／ 只挑几个镜头试试。</div>
+        </div>
+      </div>
+      <div class="step anim" style="--d:780">
+        <div class="sn">3</div>
+        <div>
+          <div class="st">一关一关看，说「确认」或者提意见</div>
+          <div class="ss">它会按你的意思改，最后把成品一集一集交给你。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 长视频 -->
+  <section class="scene" data-narr="要注意的一点：它每次最多只能生成十五秒左右的一段。所以长视频会先被切成几段，一段一段做，最后再拼成完整的一条。">
+    <div class="kicker warm anim" style="--d:80">如果视频比较长</div>
+    <h2 class="h2 anim" style="--d:180">一次最多出 <span class="hl2">15 秒左右</span> 的一段</h2>
+    <div class="longbar anim" style="--d:460">
+      <div class="seglabel">你的原始视频</div>
+      <div class="segrow">
+        <div class="seg">第 1 段</div>
+        <div class="seg">第 2 段</div>
+        <div class="seg">第 3 段</div>
+        <div class="seg">第 4 段</div>
+      </div>
+      <div class="seglabel">它自动切成几段 → 一段一段做 → 再拼起来</div>
+      <div class="finalbar anim" style="--d:760">一条完整、连续的成片</div>
+    </div>
+    <p class="lead anim" style="--d:940">你不需要自己剪，拼好之后再交给你。</p>
+  </section>
+
+  <!-- 9 贴心细节 -->
+  <section class="scene" data-narr="还有几个省心的地方：进度会一直存着，今天做一半，明天接着来；换一台电脑也能接着做；某一集不满意，只改那一集，不会连累你已经确认好的部分。">
+    <div class="kicker anim" style="--d:80">几个省心的地方</div>
+    <h2 class="h2 anim" style="--d:180">不用一口气做完，也不怕中途打断</h2>
+    <div class="grid4" style="margin-top:8px">
+      <div class="card anim" style="--d:440">
+        <div class="ct">进度会自己存着</div>
+        <div class="cd">今天做一半，明天打开接着来，之前确认过的不用重做。</div>
+      </div>
+      <div class="card anim" style="--d:580">
+        <div class="ct">换电脑也能接着做</div>
+        <div class="cd">东西都写在文件里，换台电脑打开，从上次停下的地方继续。</div>
+      </div>
+      <div class="card anim" style="--d:720">
+        <div class="ct">不满意只改那一段</div>
+        <div class="cd">只影响你指出的那一集，其他已经确认好的部分保持不动。</div>
+      </div>
+      <div class="card anim" style="--d:860">
+        <div class="ct">找不到素材会告诉你</div>
+        <div class="cd">需要的人物图找不到，它会说明情况，并给你两个选择。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 结尾 -->
+  <section class="scene" data-narr="总结一下：一个视频进去，一套可以照着做的方案出来。现在就可以把视频发给它，说一句：照这个做。">
+    <div class="kicker anim" style="--d:80">总结</div>
+    <div class="endwrap">
+      <h2 class="h2 anim" style="--d:220">一个视频进去，<br><span class="grad">一套照着做就行的方案出来</span></h2>
+      <p class="lead anim" style="--d:520">中间每一步，都停下来等你说一声「可以」。</p>
+      <div class="cta anim" style="--d:720">把视频发给它，说一句：「照这个做」</div>
+    </div>
+  </section>
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-top">
+      <div class="brandmark"><span class="lg">H3</span>视频复刻 · 两分钟看懂</div>
+      <div class="counter" id="counter">1 / 10</div>
+    </div>
+  </div>
+  <div class="subs"><span id="subs"></span></div>
+  <div class="hint" id="hint">空格 播放/暂停 · ← → 上一段/下一段</div>
+
+  <div class="controlbar">
+    <div class="segs" id="segs"></div>
+    <div class="ctrls">
+      <button class="cbtn" id="btnPrev" type="button">‹ 上一段</button>
+      <button class="cbtn primary" id="btnPlay" type="button">暂停</button>
+      <button class="cbtn" id="btnNext" type="button">下一段 ›</button>
+      <button class="cbtn" id="btnReplay" type="button">重播</button>
+      <button class="cbtn" id="btnVoice" type="button">旁白：关</button>
+      <button class="cbtn" id="btnFull" type="button">全屏</button>
+      <div class="clock" id="clock">00:00 / 01:40</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var stage = document.getElementById("stage");
+  var scenes = Array.prototype.slice.call(document.querySelectorAll(".scene"));
+  var segsBox = document.getElementById("segs");
+  var subsEl = document.getElementById("subs");
+  var counterEl = document.getElementById("counter");
+  var clockEl = document.getElementById("clock");
+  var hintEl = document.getElementById("hint");
+  var btnPlay = document.getElementById("btnPlay");
+
+  // 每段时长（秒）
+  var DUR = [7, 9, 8, 10, 11, 13, 12, 9, 10, 8];
+  var TOTAL = DUR.reduce(function (a, b) { return a + b; }, 0);
+  var LABELS = ["封面", "问题", "一句话", "看懂视频", "交给你什么", "三道关卡", "怎么用", "长视频", "省心设计", "结尾"];
+
+  var idx = 0, elapsed = 0, playing = true, last = 0, voiceOn = false, rafId = 0;
+
+  /* ---------- URL 参数：?scene=4&t=2&paused=1&instant=1 ---------- */
+  var q = new URLSearchParams(location.search);
+  if (q.has("instant")) { stage.classList.add("instant"); }
+  if (q.has("paused")) { playing = false; }
+
+  /* ---------- 章节进度条 ---------- */
+  var fills = [];
+  scenes.forEach(function (sc, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.style.flex = DUR[i] + " 1 0%";
+    b.title = "第 " + (i + 1) + " 段 · " + LABELS[i];
+    b.setAttribute("aria-label", b.title);
+    var bar = document.createElement("i");
+    var fill = document.createElement("b");
+    bar.appendChild(fill);
+    b.appendChild(bar);
+    b.addEventListener("click", function () { goTo(i, 0, playing); });
+    segsBox.appendChild(b);
+    fills.push(fill);
+  });
+
+  /* ---------- 场景切换 ---------- */
+  function paint(i) {
+    scenes.forEach(function (sc, k) {
+      if (k === i) {
+        sc.classList.remove("on");
+        void sc.offsetWidth;         // 让入场动画重新播放
+        sc.classList.add("on");
+      } else {
+        sc.classList.remove("on");
+      }
+    });
+    var sc = scenes[i];
+    var narr = sc.getAttribute("data-narr") || "";
+    subsEl.textContent = narr;
+    counterEl.textContent = (i + 1) + " / " + scenes.length;
+    speak(narr);
+  }
+
+  function goTo(i, t, keepPlaying) {
+    if (i < 0) { i = 0; }
+    if (i > scenes.length - 1) { i = scenes.length - 1; }
+    idx = i;
+    elapsed = t || 0;
+    paint(idx);
+    if (keepPlaying !== undefined) { setPlaying(keepPlaying); }
+    drawBars();
+  }
+
+  function drawBars() {
+    var acc = 0;
+    for (var i = 0; i < scenes.length; i++) {
+      var p = i < idx ? 1 : (i > idx ? 0 : Math.min(1, elapsed / DUR[i]));
+      fills[i].style.width = (p * 100).toFixed(2) + "%";
+      acc += DUR[i];
+    }
+    var done = 0;
+    for (var j = 0; j < idx; j++) { done += DUR[j]; }
+    done += Math.min(elapsed, DUR[idx]);
+    clockEl.textContent = fmt(done) + " / " + fmt(TOTAL);
+  }
+
+  function fmt(s) {
+    s = Math.max(0, Math.floor(s));
+    var m = Math.floor(s / 60), sec = s % 60;
+    return (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
+  function setPlaying(v) {
+    playing = v;
+    btnPlay.textContent = playing ? "暂停" : "播放";
+    if (!playing) { stopSpeak(); }
+    else { speak(scenes[idx].getAttribute("data-narr") || ""); }
+  }
+
+  /* ---------- 旁白（浏览器自带朗读，可关） ---------- */
+  function stopSpeak() {
+    try { if (window.speechSynthesis) { window.speechSynthesis.cancel(); } } catch (e) {}
+  }
+  function speak(text) {
+    if (!voiceOn || !text) { return; }
+    try {
+      if (!window.speechSynthesis) { return; }
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "zh-CN";
+      u.rate = 1.02;
+      u.pitch = 1;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  /* ---------- 主循环 ---------- */
+  function loop(now) {
+    rafId = window.requestAnimationFrame(loop);
+    if (!last) { last = now; }
+    var dt = (now - last) / 1000;
+    last = now;
+    if (dt > 0.5) { dt = 0.5; }
+    if (!playing) { return; }
+    elapsed += dt;
+    if (elapsed >= DUR[idx]) {
+      if (idx >= scenes.length - 1) {
+        elapsed = DUR[idx];
+        drawBars();
+        setPlaying(false);
+        return;
+      }
+      idx += 1;
+      elapsed = 0;
+      paint(idx);
+    }
+    drawBars();
+  }
+
+  /* ---------- 控件 ---------- */
+  btnPlay.addEventListener("click", function () {
+    if (!playing && idx === scenes.length - 1 && elapsed >= DUR[idx] - 0.01) { goTo(0, 0, true); return; }
+    setPlaying(!playing);
+  });
+  document.getElementById("btnPrev").addEventListener("click", function () {
+    if (elapsed > 1.2) { goTo(idx, 0); } else { goTo(idx - 1, 0); }
+  });
+  document.getElementById("btnNext").addEventListener("click", function () {
+    if (idx >= scenes.length - 1) { goTo(0, 0, true); } else { goTo(idx + 1, 0); }
+  });
+  document.getElementById("btnReplay").addEventListener("click", function () { goTo(0, 0, true); });
+  var btnVoice = document.getElementById("btnVoice");
+  btnVoice.addEventListener("click", function () {
+    voiceOn = !voiceOn;
+    btnVoice.textContent = "旁白：" + (voiceOn ? "开" : "关");
+    btnVoice.classList.toggle("on", voiceOn);
+    if (voiceOn) { speak(scenes[idx].getAttribute("data-narr") || ""); } else { stopSpeak(); }
+  });
+  document.getElementById("btnFull").addEventListener("click", function () {
+    try {
+      if (document.fullscreenElement) { document.exitFullscreen(); }
+      else if (stage.requestFullscreen) { stage.requestFullscreen(); }
+    } catch (e) {}
+  });
+
+  stage.addEventListener("click", function (e) {
+    if (e.target.closest(".controlbar") || e.target.closest(".segs")) { return; }
+    setPlaying(!playing);
+  });
+
+  window.addEventListener("keydown", function (e) {
+    if (e.code === "Space") { e.preventDefault(); setPlaying(!playing); }
+    else if (e.code === "ArrowRight") { goTo(idx + 1, 0); }
+    else if (e.code === "ArrowLeft") { goTo(idx - 1, 0); }
+    else if (e.key === "r" || e.key === "R") { goTo(0, 0, true); }
+    else if (e.key === "f" || e.key === "F") { document.getElementById("btnFull").click(); }
+  });
+
+  setTimeout(function () { hintEl.style.transition = "opacity .8s ease"; hintEl.style.opacity = "0"; }, 6000);
+
+  /* ---------- 自适应缩放 ---------- */
+  function fit() {
+    var k = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    stage.style.transform = "scale(" + k.toFixed(4) + ")";
+  }
+  window.addEventListener("resize", fit);
+  fit();
+
+  /* ---------- 启动 ---------- */
+  var startScene = parseInt(q.get("scene") || "1", 10);
+  var startT = parseFloat(q.get("t") || "0");
+  goTo(Math.max(0, Math.min(scenes.length - 1, startScene - 1)), startT, playing);
+  if (playing) { rafId = window.requestAnimationFrame(loop); }
+})();
+</script>
+<style>
+  /* 自适应：内容过高时整体等比缩小，保证任何字体环境下都不溢出 */
+  .sceneinner{display:flex;flex-direction:column;gap:20px;width:100%;transform-origin:center center;}
+</style>
+<script>
+(function(){
+  var scenes = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+  scenes.forEach(function(sc){
+    var inner = document.createElement('div');
+    inner.className = 'sceneinner';
+    while (sc.firstChild) { inner.appendChild(sc.firstChild); }
+    sc.appendChild(inner);
+  });
+  var subs = document.querySelector('.subs');
+  var stage = document.getElementById('stage');
+  function safeAvail(sc){
+    var cs = window.getComputedStyle(sc);
+    return sc.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  }
+  function fitScenes(){
+    scenes.forEach(function(sc){
+      var inner = sc.firstElementChild;
+      inner.style.transform = 'none';
+      var h = inner.offsetHeight;
+      var avail = safeAvail(sc);
+      var f = (avail > 0 && h > avail) ? Math.max(0.78, avail / h) : 1;
+      inner.style.transform = f < 0.999 ? 'scale(' + f.toFixed(3) + ')' : 'none';
+    });
+  }
+  fitScenes();
+  window.addEventListener('resize', fitScenes);
+  if (location.search.indexOf('check') >= 0) {
+    var lines = [];
+    var srect = stage.getBoundingClientRect();
+    var k = (srect.height / 720) || 1;
+    var span = subs.firstElementChild;
+    var safeBottom = subs.offsetTop - 10;
+    lines.push('subs_top=' + subs.offsetTop + ' subs_h=' + subs.offsetHeight + ' ctrl_top=' + document.querySelector('.controlbar').offsetTop + ' safeBottom=' + safeBottom + ' safeTop=62');
+    scenes.forEach(function(sc, i){
+      sc.classList.add('on');
+      var inner = sc.firstElementChild;
+      var r = inner.getBoundingClientRect();
+      var top = (r.top - srect.top) / k;
+      var bottom = (r.bottom - srect.top) / k;
+      var avail = safeAvail(sc);
+      span.textContent = sc.getAttribute('data-narr') || '';
+      var rng = document.createRange();
+      rng.selectNodeContents(span);
+      var boxes = rng.getClientRects();
+      var subsLines = boxes.length;
+      var tTop = 1e9, tBottom = -1e9;
+      for (var bi = 0; bi < boxes.length; bi++) {
+        if (boxes[bi].height <= 0) { continue; }
+        tTop = Math.min(tTop, boxes[bi].top);
+        tBottom = Math.max(tBottom, boxes[bi].bottom);
+      }
+      var textH = tBottom - tTop;
+      var subsFit = (subsLines <= 3 && textH <= span.clientHeight) ? 'OK' : 'CLIPPED';
+      lines.push('scene' + (i+1) + ' h=' + inner.offsetHeight + ' avail=' + avail + ' over=' + (inner.offsetHeight - avail) + ' scale=' + (inner.style.transform || 'none') + ' top=' + top.toFixed(1) + ' bottom=' + bottom.toFixed(1) + ' subsLines=' + subsLines + ' textH=' + textH.toFixed(0) + ' subs=' + subsFit + ' ok=' + ((top >= 62 && bottom <= safeBottom) ? 'YES' : 'NO'));
+      sc.classList.remove('on');
+    });
+    var onScene = document.querySelector('.scene.on');
+    span.textContent = onScene ? (onScene.getAttribute('data-narr') || '') : '';
+    var pre = document.createElement('pre');
+    pre.id = 'layout-report';
+    pre.textContent = lines.join(String.fromCharCode(10));
+    document.body.appendChild(pre);
+  }
+})();
+</script>
+</body>
+</html>

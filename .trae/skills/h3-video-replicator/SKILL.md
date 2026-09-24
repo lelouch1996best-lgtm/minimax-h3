@@ -64,7 +64,7 @@ description: "Reverse-engineers a reference video into H3 prompts, shot breakdow
 
 ```
 参考视频文件
-  → Step 0 元信息探测 + 提帧（ffmpeg / OpenCV）
+  → Step 0 元信息探测 + 提帧（frame-extract / OpenCV）
   → Step 1 逐帧看图 → 《镜头分解.md》（事实依据）
   → Step 2 询问复刻模式（忠实复刻 / 风格迁移 / 单镜头）
   → Step 3 确认输出目录名
@@ -77,19 +77,16 @@ description: "Reverse-engineers a reference video into H3 prompts, shot breakdow
 
 ## Step 0 — 元信息与提帧（环境陷阱必读）
 
-1. **元信息**：`ffprobe` 读分辨率、帧率、时长，判断横竖屏与总时长。
-2. **提帧用本技能自带脚本，优先 ffmpeg、自动回退 OpenCV**：脚本会先探测 PATH 及常见位置的 ffmpeg，并用一个 32×32 黑帧 probe 验证该 ffmpeg 真的能写图片；验证通过才用 ffmpeg 提帧，否则自动回退到 OpenCV。本机存在两个 ffmpeg：TRAE 自带版（在 PATH，不能写 image2 序列）和录屏软件附带版（不在 PATH，能正常输出 png/jpg），脚本会自动选择能用的那一个。
+1. **元信息**：抽帧脚本启动时会打印 fps / 帧数 / 分辨率 / 时长（OpenCV 读取），无需 ffprobe。
+2. **提帧统一调用 `frame-extract` 技能（OpenCV 直抽，不尝试 ffmpeg、不要现写 cv2 脚本）**：
 
    ```
-   python <本技能目录>\scripts\extract_frames.py --video <视频路径> --out <输出目录> --interval 4 --height 480
+   python <skills根目录>\frame-extract\scripts\extract_frames.py --video <视频路径> --out <输出目录> --interval 4 --height 480
    ```
 
-   可选参数：
-   - `--backend ffmpeg`：强制只找 ffmpeg，找不到就报错
-   - `--backend opencv`：强制用 OpenCV
-
-3. **提帧密度**：≤15s 视频每 2 秒一帧；15—60s 每 4 秒一帧；>60s 每 6—8 秒一帧。相邻帧内容突变处即疑似切镜点，可在两帧之间手动补 `--start` 再提一帧确认。
-4. 帧图统一缩到高 480px 再看，节省 token。
+   本技能自带的 `scripts\extract_frames.py`（旧 ffmpeg 优先版）已弃用，一律改用 frame-extract。
+3. **提帧密度**：≤15s 视频每 2 秒一帧；15—60s 每 4 秒一帧；>60s 每 6—8 秒一帧。相邻帧内容突变处即疑似切镜点，可用 `--times` 在两帧之间补提一帧确认。
+4. 帧图统一缩到高 480px 再看，节省 token（`--height 480`）。长视频可加 `--sheet --cols 3` 直接出联系表。
 
 ## Step 1 — 镜头分解（复刻的事实依据）
 

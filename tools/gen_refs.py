@@ -28,6 +28,14 @@ gen_refs.py — 凡人 IP 真人质感参考图批量生成（65535 gpt-image-2 
   #   备选「拼版单图」：先用 PIL 把两张三视图左右拼成一张（左 A 右 B、无文字），再按单图传入
   python tools/gen_refs.py --jobs E12-refs.json --out "<分集目录>\\images" --rec "<分集目录>\\任务记录"
 
+  # 拆片集「场景图先行 → 关键帧派生」（2026-09-22 起，替代旧的"截视频尾帧作下段首帧"）：
+  #   第一步 scene：纯文生图空镜（无 sanyi，整个不传 input.image），全片场景只生成一张
+  #   第二步 keyframe：sanyi 数组第 1 张恒为场景图，其后按出场顺序放 1~N 张角色三视图；
+  #     人数用 job["people"] 显式指定（或按数组长度推断）；每个需要衔接的段预生成一张关键帧
+  #   所有关键帧与段 A 参考图同源同质（均为 65535 生成图），且房间布局逐处对齐；
+  #   关键帧全部就绪后多段可并发提交 t8balance，不再串行等尾帧
+  python tools/gen_refs.py --jobs E15-refs.json --out "<分集目录>\\images" --rec "<分集目录>\\任务记录"
+
   # 审核拒绝的 job 改词/换造型后重试
   python tools/gen_refs.py --jobs E12-refs.json --out ... --rec ... --redo
 
@@ -97,6 +105,20 @@ COMPOSITION_FULLBODY = """竖屏 9:16 单人全身画面，人物从头到脚完
 生活照式的自然取景：允许轻微倾斜、留白不均、不完全居中，但人物始终是画面主体、面部与全身清晰。
 画面只保留一个人物，三视图排版仅作身份参考，不要出现拼贴/多视图/白背景。"""
 
+# 纯环境空镜（2026-09-22 新增，拆片集"场景图先行"第一步：先锁定统一场景，再派生各段关键帧）
+COMPOSITION_SCENE = """竖屏 9:16 纯环境空镜画面，**画面中不出现任何人物、人物剪影或人物局部（无手/手臂入画）**；
+取景机位＝第一人称视角平视中景，呈现完整的室内空间与关键陈设，构图自然、环境细节清晰可辨；
+生活照式的自然取景：允许轻微倾斜、留白不均，像随手拍下的房间一角。"""
+
+# 衔接关键帧（2026-09-22 新增：node 6 用的高质量首帧，由"场景图 + 角色三视图"多图直传生成）
+# 注意：参考数组第 1 张恒为场景图（构图/环境/画风基准），其后为各角色三视图（身份基准）
+COMPOSITION_KEYFRAME = """竖屏 9:16 {person_count}画面，第一人称视角平视中景，人物位于画面中央，面部完整清晰；
+**以第 1 张参考图（空场景图）为构图、机位、陈设、光线与画风的唯一基准，房间布局、道具位置与第 1 张参考图逐处对齐，
+只在该场景中自然放入人物，不得改动房间结构、道具位置或光线方向**；
+其后的角色参考图仅用于锁定各人物的面部五官、发型发饰与服装形制；
+生活照式的自然取景：允许轻微倾斜、留白不均，但人物始终是画面主体。
+画面只保留{only_note}；参考图排版仅作基准，不要出现拼贴/多视图/白背景。"""
+
 REALISM = """这要像一张自然的生活照：{person}，真实到像是现实中随手拍下的一张照片，
 而不是影棚拍摄、商业时尚大片或 CG 渲染。真实亚洲女性皮肤质感，可见毛孔、细小绒毛、
 自然泛红与微小瑕疵，保留柔和的阴影过渡；面部比例与骨相真实，不放大眼睛、不改脸型、
@@ -106,6 +128,14 @@ REALISM = """这要像一张自然的生活照：{person}，真实到像是现�
 不使用高端相机的大片感，背景不刻意虚化、环境细节清晰可辨；
 表情自然克制（浅笑或放松的中性表情），姿态是"被随手拍到的瞬间"而不是摆拍；
 身材与身体比例真实，不做夸张曲线与模特级修图。"""
+
+# 纯环境空镜质感段（无人物；其余措辞对齐 REALISM，保证空镜与后续关键帧/视频画风一致）
+REALISM_SCENE = """这要像一张自然的生活照：一处真实的室内空间，真实到像是现实中随手拍下的一张照片，
+而不是影棚布景、游戏场景或 CG 渲染。材质质感真实（木纹、织物、陶瓷、金属各有真实纹理），
+现场光源自然（{light}），物体上有真实明暗与柔和的阴影过渡；
+手机随手拍的观感：允许轻微手持抖动带来的柔焦、轻微噪点与锐化痕迹、略粗糙的分辨率，
+不使用高端相机的大片感，环境细节清晰可辨、不刻意虚化；
+陈设是"生活中自然摆放"的状态而非布景摆拍。"""
 
 NEGATIVE_COMMON = """避免：CGI、3D 渲染、娃娃皮肤、瓷肌、过度磨皮、美颜 App 瘦脸大眼、眼睛过大、面部完全对称、
 睫毛过度锐化、油蜡感高光、影棚打光、商业时尚大片、刻意轮廓光、极端背景虚化、过度 HDR、
@@ -122,6 +152,22 @@ NEGATIVE_DUO = """避免：CGI、3D 渲染、娃娃皮肤、瓷肌、过度磨�
 手与手指的数量、关节、长度、交叠与握持合理（无多指、无粘连、无多余的手）；
 两位女性不得合并为一张脸、不得互换身份、不得出现第三个身影或镜中重影；
 首饰不重复不悬空、不穿模，背景陈设不变形不重复。"""
+
+# 纯环境空镜反向约束（无人，故去掉手指/人物相关项，强调无人物）
+NEGATIVE_SCENE = """避免：CGI、3D 渲染、游戏场景感、影棚布景、商业地产大片感、刻意轮廓光、极端背景虚化、
+过度 HDR、材质过度锐化、重复或变形的陈设；
+画面无任何文字、字幕、水印、logo，无现代物品穿帮；
+**画面中不出现任何人物、人脸、人影、人物剪影、手、手臂或身体局部**；
+背景陈设、道具、建筑构件不变形不重复、不悬空不穿模。"""
+
+# 衔接关键帧反向约束（多人物时用；措辞对齐 NEGATIVE_DUO，改为按人数泛化）
+NEGATIVE_KEYFRAME = """避免：CGI、3D 渲染、娃娃皮肤、瓷肌、过度磨皮、美颜 App 瘦脸大眼、眼睛过大、面部完全对称、
+睫毛过度锐化、油蜡感高光、影棚打光、商业时尚大片、刻意轮廓光、极端背景虚化、过度 HDR、
+毛孔纹理过度锐化、不真实的解剖比例；
+画面无任何文字、字幕、水印、logo，无现代物品穿帮；
+手与手指的数量、关节、长度、交叠与握持合理（无多指、无粘连、无多余的手）；
+各人物不得合并为一张脸、不得互换身份、不得出现额外的身影或镜中重影；
+首饰不重复不悬空、不穿模；**房间布局、道具位置、光线方向必须与第 1 张场景参考图一致，不得改动或新增陈设**。"""
 
 PROFILES = {
     # 近景 · 男友 POV（palace-girlfriend-trending 默认）
@@ -150,25 +196,51 @@ PROFILES = {
                           "\n朝向正面：不侧身、不背对镜头、不回眸侧脸、不低头遮脸、不出现背面或侧面视角；",
         "person": "一位明确的成年女性",
     },
+    # 纯环境空镜 · 文生图（2026-09-22 新增，拆片集场景锚点第一步；无 sanyi，走文生图）
+    "scene": {
+        "composition": COMPOSITION_SCENE,
+        "realism": REALISM_SCENE,
+        "light": "烛光/窗光/灯笼光/室内暖灯",
+        "negative_extra": "",
+        "negative_common": NEGATIVE_SCENE,
+        "person": "",
+        "text2img": True,
+        "has_lock": False,
+        "has_age": False,
+    },
+    # 衔接关键帧 · 图生图多图直传（2026-09-22 新增：场景图恒为数组第 1 张 + 1~N 张角色三视图）
+    # 各段 node 6 用它，画质与段A同源，替代旧的"视频截尾帧"。构图占位 {person_count}/{only_note} 按人数渲染
+    "keyframe": {
+        "composition": COMPOSITION_KEYFRAME,
+        "realism": REALISM,
+        "light": "烛光/窗光/灯笼光/室内暖灯",
+        "negative_extra": "",
+        "negative_common": NEGATIVE_KEYFRAME,
+        "person": "一位明确的成年女性",
+        "has_lock": False,
+        "has_age": False,
+    },
 }
 
-TEMPLATE = """{composition}
+# 关键帧构图人数措辞
+PEOPLE_COUNT = {1: "单人", 2: "双人同框", 3: "三人同框", 4: "四人同框"}
 
-{lock}
-{age}
 
-{realism}
-
-场景：{scene}。
-{action_line}
-
-{negative}"""
+def infer_people(job):
+    """keyframe 人数：优先 job['people']；否则按 sanyi 数组（第 1 张为场景图，其余为人）推断。"""
+    if job.get("people"):
+        return int(job["people"])
+    s = job.get("sanyi")
+    if isinstance(s, list):
+        return max(1, len(s) - 1)
+    return 1
 
 
 def render_prompt(job, lock, age):
     """按 job 的 profile / light / negative_extra / action_line 渲染完整提示词。
     缺省 profile=portrait，输出与历史版本逐字一致。
-    profile 可覆盖 negative_common（双人同框用）与 person（人数措辞）。"""
+    profile 可覆盖 negative_common（双人/关键帧用）、person（人数措辞）、realism（空镜用）；
+    scene/keyframe 通过 has_lock/has_age=False 省略身份锁定与年龄段。"""
     name = job.get("profile") or "portrait"
     prof = PROFILES.get(name)
     if prof is None:
@@ -177,19 +249,57 @@ def render_prompt(job, lock, age):
         + prof["negative_extra"]
     if job.get("negative_extra"):
         negative += "\n" + job["negative_extra"]
-    # 动作句：默认「人物正在…」句式（palace 沿用）；job 可用 action_line 整句覆盖（dance / 双人用）
-    action_line = job.get("action_line") or (
-        f"人物正在{job['action']}；情绪按剧本给，但须呈现为自然瞬间，不做夸张摆拍。")
+
+    # 动作句：默认「人物正在…」（palace 沿用）；action_line 整句覆盖；scene 文生图无人物，用 action 作空镜补充
+    if job.get("action_line"):
+        action_line = job["action_line"]
+    elif prof.get("text2img"):
+        action_line = job.get("action", "")
+    else:
+        action_line = (f"人物正在{job['action']}；情绪按剧本给，但须呈现为自然瞬间，不做夸张摆拍。")
+
     person = job.get("person") or prof.get("person") or "一位明确的成年女性"
-    return TEMPLATE.format(
-        composition=job.get("composition") or prof["composition"],
-        lock=lock,
-        age=age,
-        realism=REALISM.format(light=job.get("light") or prof["light"], person=person),
-        scene=job["scene"],
-        action_line=action_line,
-        negative=negative,
-    )
+    # keyframe 多人时质感段主语按人数泛化（job 显式 person 优先）
+    if name == "keyframe" and not job.get("person"):
+        np_ = infer_people(job)
+        person = ("一位明确的成年女性" if np_ == 1
+                  else f"{np_}位明确的成年女性（各自成年、气质各有不同）")
+
+    # 构图：keyframe 按人数填充占位
+    composition = job.get("composition") or prof["composition"]
+    if "{person_count}" in composition:
+        np_ = infer_people(job)
+        only_note = ("这一位女性，不出现第二个人物" if np_ == 1
+                     else f"这{np_}位女性，不出现额外人物")
+        composition = composition.format(person_count=PEOPLE_COUNT.get(np_, f"{np_}人同框"),
+                                         only_note=only_note)
+
+    # 质感段：空镜模板无 person 占位
+    realism_tpl = prof.get("realism") or REALISM
+    rkw = {"light": job.get("light") or prof["light"]}
+    if "{person}" in realism_tpl:
+        rkw["person"] = person
+    realism = realism_tpl.format(**rkw)
+
+    # 拼装（lock/age 连续无空行，对齐历史 TEMPLATE）
+    head = composition
+    mid = ""
+    if prof.get("has_lock", True) and lock:
+        mid = lock
+    if prof.get("has_age", True) and age:
+        mid = (mid + "\n" + age) if mid else age
+    return _join(head, mid, realism, job["scene"], action_line, negative)
+
+
+def _join(composition, mid, realism, scene, action_line, negative):
+    parts = [composition]
+    if mid:
+        parts += ["", mid]
+    parts += ["", realism, "", f"场景：{scene}。"]
+    if action_line:
+        parts.append(action_line)
+    parts += ["", negative]
+    return "\n".join(parts)
 
 
 def eprint(*a):
@@ -212,18 +322,27 @@ def get_json(url, key, timeout=45):
 
 
 def build_prompt(job, attempt):
-    """attempt: 1 原始 / 2 改年龄措辞 / 3 换造型（年龄措辞保留）"""
-    lock = job["lock"]
+    """attempt: 1 原始 / 2 改年龄措辞 / 3 换造型（年龄措辞保留）
+    scene（文生图）不使用重试链的年龄/造型逻辑（无人物），attempt≥2 直接返回 None。"""
+    name = job.get("profile") or "portrait"
+    prof = PROFILES.get(name, {})
+    if prof.get("text2img"):
+        if attempt >= 2:
+            return None, None
+        return render_prompt(job, "", ""), None
+    lock = job.get("lock", "")  # keyframe 等 has_lock=False 的 profile 可无 lock
     sanyi = job["sanyi"]
-    prof = PROFILES.get(job.get("profile") or "portrait", {})
     age = job.get("age") or DEFAULT_AGE
-    if attempt >= 2:
-        age = (job.get("age_retry") or prof.get("age_retry") or AGE_RETRY)
     if attempt >= 3:
         if not job.get("fallback_sanyi"):
             return None, None
         sanyi = job["fallback_sanyi"]
-        lock = job.get("fallback_lock") or job["lock"]
+        lock = job.get("fallback_lock") or lock
+    elif attempt == 2 and not prof.get("has_age", True):
+        # has_age=False（keyframe）：没有年龄措辞可改，attempt2 与 attempt1 等义，直接跳到换造型环节
+        return None, None
+    if attempt >= 2:
+        age = (job.get("age_retry") or prof.get("age_retry") or AGE_RETRY)
     prompt = render_prompt(job, lock, age)
     return prompt, sanyi
 
@@ -232,16 +351,18 @@ def submit(job, attempt, key, rec_dir, model, size, resolution, n):
     prompt, sanyi = build_prompt(job, attempt)
     if prompt is None:
         return None, None
-    # 参考图：单个路径 → 传字符串（历史行为逐字不变）；路径列表 → 传数组（多角色身份基准直传）
-    # 2026-09-20 E12 实测：input.image 传数组（两张三视图）被接口接受并正常出图，
-    # 是「双人同框」的首选做法（省掉本地拼版），拼版仅作备选。
-    refs = sanyi if isinstance(sanyi, list) else [sanyi]
-    images = ["data:image/png;base64," + base64.b64encode(open(p, "rb").read()).decode()
-              for p in refs]
-    payload = {"kind": "image", "model": model,
-               "input": {"prompt": prompt, "size": size,
-                         "resolution": resolution, "n": n,
-                         "image": images if len(images) > 1 else images[0]}}
+    inp = {"prompt": prompt, "size": size, "resolution": resolution, "n": n}
+    # sanyi=None → 文生图（scene 空镜），不带 image；其余：单路径传字符串、列表传数组（多图直传）
+    if sanyi is not None:
+        refs = sanyi if isinstance(sanyi, list) else [sanyi]
+        missing = [p for p in refs if not os.path.exists(p)]
+        if missing:
+            # 依赖未就绪（典型：scene 场景图尚未生成，keyframe 在等）
+            return "WAIT", missing
+        images = ["data:image/png;base64," + base64.b64encode(open(p, "rb").read()).decode()
+                  for p in refs]
+        inp["image"] = images if len(images) > 1 else images[0]
+    payload = {"kind": "image", "model": model, "input": inp}
     rp = os.path.join(rec_dir, f"65535-{job['tag']}-request.json")
     with open(rp, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -274,7 +395,8 @@ def main():
     ap.add_argument("--timeout", type=int, default=1800, help="总轮询超时秒（默认 1800）")
     ap.add_argument("--profile", choices=sorted(PROFILES),
                     help="构图 profile 全局覆盖：portrait 近景（默认）/ portrait_duo 双人同框 / "
-                         "fullbody 全身（dance）；job 内 profile 字段可单独覆盖本参数")
+                         "fullbody 全身（dance）/ scene 空镜文生图 / keyframe 衔接关键帧；"
+                         "job 内 profile 字段可单独覆盖本参数")
     ap.add_argument("--redo", action="store_true", help="清除 failed/未完成记录后重跑这些 job")
     ap.add_argument("--dry-run", action="store_true", help="只打印各 attempt 提示词，不提交")
     a = ap.parse_args()
@@ -320,8 +442,10 @@ def main():
                       f" sanyi={_sanyi_label(s)} =====")
                 if p:
                     print(p)
+                elif att == 2:
+                    print("（该 profile 无年龄重试环节，attempt2 不适用）")
                 else:
-                    print("（该 job 未配置 fallback_sanyi，attempt3 不可用）")
+                    print("（未配置 fallback_sanyi，attempt3 不可用）")
                 print()
         return 0
 
@@ -336,11 +460,20 @@ def main():
         while attempt <= 3:
             res, sanyi = submit(j, attempt, key, a.rec, a.model, a.size, a.resolution, a.n)
             if res is None:
+                if attempt < 3:
+                    # 该 attempt 对当前 profile 不适用（如 keyframe 无年龄重试），推进下一环节
+                    print(f"SKIP {j['tag']}：attempt{attempt} 对该 profile 不适用，推进 attempt{attempt + 1}")
+                    attempt += 1
+                    continue
                 state[j["tag"]] = {"status": "failed",
-                                   "reason": f"重试链在 attempt{attempt} 不可用（未配置 fallback_sanyi）",
+                                   "reason": "重试链耗尽：无年龄重试环节且未配置 fallback_sanyi",
                                    "out": j["out"]}
                 save()
-                print(f"SKIP {j['tag']}：attempt{attempt} 不可用（无 fallback_sanyi），链耗尽")
+                print(f"SKIP {j['tag']}：重试链耗尽（无可用 fallback_sanyi）")
+                break
+            if res == "WAIT":
+                # 依赖未就绪（scene 未出图）：本轮跳过、不记失败；等依赖生成后同命令重跑
+                print(f"WAIT {j['tag']}：参考图缺失（{sanyi}），先提交其他 job，稍后重跑本命令")
                 break
             tid = res.get("id")
             print(f"SUBMIT {j['tag']} attempt{attempt} {tid} {res.get('status')}")

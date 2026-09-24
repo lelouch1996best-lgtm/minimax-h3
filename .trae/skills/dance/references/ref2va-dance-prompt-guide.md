@@ -15,7 +15,7 @@
 
 ## 1. 反推舞蹈（先看懂再写）
 
-1. 用 ffmpeg 按 1fps 抽帧（源视频竖屏可缩到 270px 宽省 token），逐帧读动作。
+1. 用 `frame-extract` 技能按 1fps 抽帧（`--interval 1 --height 480`，OpenCV 直抽，不用 ffmpeg），逐帧读动作。
 2. 输出一张**节拍表**：时间点 / 队形 / 下肢动作 / 上肢手势 / 镜头 / 备注，例如：
    - 0–2.5s：C 位单人低角度腾空大跳（屈膝收腿、一臂冲天）
    - 2.5–5s：三人 V 字队形落位，高抬腿交叉步前进，手臂在脸前交叉/打开
@@ -111,6 +111,5 @@ non_diegetic_music:
 5. 无多臂多腿等畸形（高速挥臂处允许自然运动模糊）
 
 不合格 → 针对问题改提示词对应段重跑（身份问题强化 retention 与站位锚定；动作问题改 [Shot]
-描述；时长/805 问题换 ultra）。抽帧可用完整版 ffmpeg：
-`C:\Users\Administrator\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\vm\tools\app\ffmpeg\ffmpeg.exe`
-（PATH 里的 TRAE 精简版 ffmpeg 无 image2 muxer，不能出 jpg）。
+描述；时长/805 问题换 ultra）。抽帧统一用 `frame-extract` 技能（OpenCV，`--times 1,3,5,7,9`
+或 `--sheet` 联系表），不再使用 ffmpeg。

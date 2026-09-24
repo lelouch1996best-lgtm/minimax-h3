@@ -194,7 +194,12 @@ python "d:\work\minimax_h3\.trae\skills\dance\scripts\run_dance_transfer.py" `
 
 ## Step B3 — 抽帧反推与 H3 提示词（核心工序）
 
-1. **抽帧**：对源舞视频按约 1fps、宽 270px 抽 JPG（帧数随源时长）。**必须用完整版 ffmpeg**——PATH 里的 TRAE 精简版（`e:\soft\TRAE SOLO CN\resources\app\bin\ffmpeg.exe`）没有 image2 muxer 会报 `Requested output format 'image2' is not known`；完整版路径：`C:\Users\Administrator\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\vm\tools\app\ffmpeg\ffmpeg.exe`；输出文件名不要带多个点（用 `f01.jpg` 不要 `f0.8.jpg`）。帧图落临时目录或任务目录
+1. **抽帧**：调用 `frame-extract` 技能（抽帧统一入口，OpenCV 直抽，**禁止先试 ffmpeg**），对源舞视频按 1fps 抽 JPG：
+   ```powershell
+   python "d:\work\minimax_h3\.trae\skills\frame-extract\scripts\extract_frames.py" `
+     --video "<源舞.mp4>" --out "<临时帧目录>" --interval 1 --height 480
+   ```
+   帧图落临时目录或任务目录
 2. **看懂舞**：Read 全部帧，产出节拍表（时间点 / 动作舞句 / 队形与站位变化 / 镜头）。源是屏录时，手机状态栏、App UI、电池、字幕一律视为**要排除的噪声**，写进硬性禁令而不是画面内容
 3. **写提示词**：英文 H3 Ref2VA，整体放在 ` ```text ` 围栏内，七段式：`subject_definitions`（人物各一 Subject + 场景独立 Subject，标注 `<Picture N>`）/ `summary`（含时长、铺满画面无黑边、禁三视图拼贴、禁手机 UI 字幕等硬约束）/ `retention_analysis` / `detailed_description`（`[Shot N]` + `At HH:MM:SS.mmm` 时间码切舞句）/ `overall_soundscape` / `non_diegetic_music`。多人身份**双锚定**：服色强区分 + 站位写死（red-costumed dancer remains centered…）+ 发型/瞳色/配饰差异；场景 Subject 对招牌等文字明确写 blank/illegible sign。舞动词用规范指南 §3 的舞蹈词汇表
 4. **时长 ≤10 秒**（plus/mp0.86 稳定区间，实测 10s/298 币/约 12 分钟）：源舞更长就只挑最出彩的 ≤10s 段落，节拍表与提示词只写这段，不要超
@@ -240,7 +245,7 @@ python "d:\work\minimax_h3\.trae\skills\dance\scripts\run_t8balance_ref2va.py" `
 
 路径 B 动作由提示词驱动，**不抽帧核验不许交付**（与路径 A「不抽帧直接交付」相反）：
 
-1. 用完整版 ffmpeg 在约 1/3/5/7/9 秒处抽帧（宽 360px 即可，文件名无多点），逐帧 Read
+1. 调用 `frame-extract` 技能在约 1/3/5/7/9 秒处抽帧（`--times 1,3,5,7,9`，或 `--sheet --count 5` 出联系表），逐帧 Read；不要用 ffmpeg
 2. 核验清单：① 人数与身份（服色/发型/站位与双锚定一致，**无串脸串衣**）② 节拍表关键舞句都出现、队形变化对 ③ 场景正确（走廊/大殿等与场景图一致）④ **无三视图拼贴构图、无手机 UI/状态栏、无黑边、无字幕、无可读文字** ⑤ 肢体无严重畸变（快速挥臂的自然运动模糊可接受）
 3. 返工对照：身份串 → 强化服色/站位/发型锚点并在 `retention_analysis` 重申；舞句缺失 → 细化对应 `[Shot N]` 的动作与时间码；场景/招牌出错 → 加强场景 Subject 与 blank-sign 句；构图变拼贴 → summary 硬约束再点名。**改提示词＝新任务扣费**，改完换新 tag（或删 state）重跑 B4
 4. 同一任务连续 2 次核验不合格 → 停止烧币，向用户说明并建议切**路径 A**（动作迁移还原度更高）
@@ -252,15 +257,15 @@ python "d:\work\minimax_h3\.trae\skills\dance\scripts\run_t8balance_ref2va.py" `
 ## Step 5 — 交付与发布（sau 双平台）
 
 - 音轨按路径区分：路径 A 成片自带源舞原声音轨（D01 实测）；路径 B 音轨由提示词的 `overall_soundscape`/`non_diegetic_music` 段决定（可能只有生成音乐、无环境声）。原/生成音轨可直接用则成片即发布版；要换音乐时先抽源舞原声（完整版 ffmpeg，`python -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())"`）或用 `get-music` 生成再混音，产出命名 `video\D{NN}.mp4` 作为发布版；要去原声则用 ffmpeg `-an` 或替换音轨
-- 封面：**路径 A** 用 Step A3 参考图 `<项目>images\D{NN}_{角色}_{场景}.png`（9:16 PNG，双平台同张，不从成片截帧）；**路径 B 没有生成图**，从 B5 已抽的核验帧里挑一张身份/舞势最佳的（或用完整版 ffmpeg 另抽代表帧）存为 `<项目>images\D{NN}_封面.png` 再引用。文案包里的 `- 封面：` 行写**项目根相对路径**（如 `images/D{NN}_{角色}_{场景}.png`，脚本按项目根解析），也接受绝对路径
-- 文案落盘任务目录根部 `D{NN}-双平台发布文案.txt`（B 站 / 抖音分开拟；B 站标题 ≤80 字带剧名+编号，抖音 ≤30 字口语钩子、话题 ≤5 个）。**格式必须按 `publish_episode.py` 解析规则写**：`## 一、B 站（账号：…）` / `## 二、抖音（账号：…）` 两个二级标题块，块内字段写成 `- 标题（≤80 字）：…`、`- 简介：…`、`- 标签：a,b,c`、`- 话题：`＋编号列表 `1. #话题名`（≤5 个），头部用 `- 封面：` 指定图片；写成 `【B站】/标题：` 旧式会解析失败，先 `--dry-run` 校验
+- 封面：**路径 A** 用 Step A3 参考图 `<项目>images\D{NN}_{角色}_{场景}.png`（9:16 PNG，双平台同张，不从成片截帧）；**路径 B 没有生成图**，从 B5 已抽的核验帧里挑一张身份/舞势最佳的（或用 `frame-extract` 的 `--times` 另抽代表帧）存为 `<项目>images\D{NN}_封面.png` 再引用。文案包里的 `- 封面：` 行写**项目根相对路径**（如 `images/D{NN}_{角色}_{场景}.png`，脚本按项目根解析），也接受绝对路径
+- **文案撰写统一调用 `publish-copywriting` 技能**（合规/精简/热点原文做话题三条硬要求、字段格式与模板以该技能为权威）：B 站标题 ≤80 字带剧名+编号，抖音 ≤30 字口语钩子、话题 ≤5 个。产物落盘任务目录根部 `D{NN}-双平台发布文案.txt`；格式为 `## 一、B 站（账号：…）` / `## 二、抖音（账号：…）` 两块，块内 `- **标题**：…`、`- **简介**：…`、`- **标签**：a,b,c`、抖音话题用编号列表 `N. #话题名`，头部 `- 封面：` 指定图；旧式写法会解析失败，先 `--dry-run` 校验
 - **首选：一条命令跑完**（复用宫装女友系列固化的发布脚本；该脚本 2026-09-19 起已泛化为**多项目通用**，`--project dance` 即自动切到本项目目录、`images\` 封面目录、`D{NN}.mp4` 发布版与 `douyin_dance` 账号）：
 
 ```powershell
 python d:\work\minimax_h3\tools\publish_episode.py --project dance --episode D{NN}
 ```
 
-脚本自动完成：定位任务目录与成片/封面 → 解析《D{NN}-双平台发布文案.txt》→ B 站投稿（**创作声明一次带入**）→ 回读核验 → 抖音投稿（识别短信风控门并在原地等待 `verify_code.txt`）→ 回读核验 → 落盘 `任务记录\publish_result.json` + 生成台账块。常用参数：`--platform bilibili|douyin`（只发一侧）、`--dry-run`（只打印命令）、`--verify-only --bili-aid <aid>`、`--dy-code <6位码>`（免等待）、`--delete-bili AID=<id>`（清理误投，不可逆）。**前置**：任务目录根部必须已有《D{NN}-双平台发布文案.txt》，脚本不生成创意文案。
+脚本自动完成：定位任务目录与成片/封面 → 解析《D{NN}-双平台发布文案.txt》→ B 站投稿（**创作声明一次带入**）→ 回读核验 → 抖音投稿（识别短信风控门并在原地等待 `verify_code.txt`）→ 回读核验 → 落盘 `任务记录\publish_result.json` + 生成台账块。常用参数：`--platform bilibili|douyin`（只发一侧）、`--dry-run`（只打印命令）、`--verify-only --bili-aid <aid>`、`--dy-code <6位码>`（免等待）、`--delete-bili AID=<id>`（清理误投，不可逆）。**前置**：任务目录根部必须已有《D{NN}-双平台发布文案.txt》（缺则先调用 `publish-copywriting` 技能撰写），脚本不生成创意文案。
 - 手工兜底路径：调用 `sau-upload` 技能发布。B 站：`sau bilibili upload-video --account bilibili_main`，**创作声明用 `sau-upload` 脚本 `bili_publish.py` 一次带入**（`--tid 47` 动画·短片/同人、`--cover` 参考图、10—12 标签），回读 `decl_id==1` 核验；抖音：`sau douyin upload-video --account douyin_dance --declaration "内容由AI生成"`。**抖音短信验证码 = 硬暂停**：立即停止本回合、向用户索要 6 位验证码（goal 模式先挂起），拿码后无 BOM 写 `D:\work\social-auto-upload\verify_code.txt`
 - 发布后回读双平台链接/公开状态报告用户（细节全部以 `sau-upload` 技能 SKILL.md 为权威，此处不重复实现）
 
@@ -305,7 +310,7 @@ d:\work\minimax_h3\韩老魔的歌舞团\
 | A 等待超时 / 中断 | 按超时提示 `--task-id {taskId}` 续接轮询下载，**勿重复提交**（重复扣费） → Step A4 |
 | A 迁移结果身份走样 / 肢体畸变 | 调姿势强度/姿势选择重跑；仍走样回 Step A3 强化身份锁定 + 全身构图 → Step A4 |
 | 源舞超 28 秒（仅 A，840 帧上限） | 用 ffmpeg 截段到目标时长再传，或组合 `499 跳过帧`+`422 帧上限` 截取段落 → Step A4 |
-| 抽帧报 `image2 is not known` / 输出格式无效（仅 B） | PATH 里的 ffmpeg 是 TRAE 精简版，改用完整版 `…\vm\tools\app\ffmpeg\ffmpeg.exe`；文件名不要带多个点 → Step B3/B5 |
+| 抽帧相关问题（仅 B） | 抽帧统一走 `frame-extract` 技能（OpenCV），不再使用 ffmpeg，避免精简版无 image2 muxer 的问题 → Step B3/B5 |
 | B 多人服色撞色、出片串脸串衣 | 开工前换高对比造型；已出片则强化服色+站位+发型/配饰双锚定，`retention_analysis` 重申 Picture↔Subject 对应，换新 tag 重跑 → Step B3→B4 |
 | B 提示词文件报「没找到 ```text 围栏」 | H3 提示词必须整体放在 ` ```text ` 围栏内（见 references 指南 §0），补齐后重跑（零扣费） → Step B4 |
 | B 提交零扣费失败（图片不存在/围栏缺失） | 修 job JSON 或提示词后直接重跑，不会重复扣费 → Step B4 |
@@ -328,7 +333,7 @@ d:\work\minimax_h3\韩老魔的歌舞团\
 2. 定位三视图 `assets\凡人\character\李缨宁\人物三视图（宫装）.png`；**身份描述以三视图原图为准**（`_人物资产索引.md` 文字可能与图不符时读图核对），本例实际为双麻花辫齐刘海宫装造型
 3. 65535 `gpt-image-2` 图生图（9:16/2k）：prompt＝全身＋正面构图 + 身份锁定 + 现实感基准真人质感 + 大殿舞势场景（正身朝向镜头）+ 反向约束（强调全身不裁切、朝向正面），生成并归档 `<项目>images\D01_李缨宁_大殿.png`，登记资产清单
 4. 后台跑 `run_dance_transfer.py --image images\D01_李缨宁_大殿.png --video dances\古典舞A.mp4 -o video\D01_舞蹈迁移.mp4`（plus/720P 默认；≤10s 高清加 `--resolution 3`），每 3—5 分钟查一次状态（输出只有几行）→ 成片自动下载、任务记录自动落盘，直接交付（不抽帧）
-5. 需要 BGM → 抽源舞原声混音出 `video\D01.mp4`；文案落 `D01-双平台发布文案.txt` → sau 发布 B 站（bili_publish.py 一次带入创作声明，tid 47）+ 抖音（--declaration「内容由AI生成」），弹验证码则硬暂停索码
+5. 需要 BGM → 抽源舞原声混音出 `video\D01.mp4`；调用 `publish-copywriting` 技能产出 `D01-双平台发布文案.txt` → sau 发布 B 站（bili_publish.py 一次带入创作声明，tid 47）+ 抖音（--declaration「内容由AI生成」），弹验证码则硬暂停索码
 6. 根目录 `歌舞团-总纲.md` + `资产清单.md` 追加台账（路径=A），报告双平台链接
 
 ### 示例 B（路径 B·提示词反推三视图直采，2026-09-20 实测）
@@ -337,9 +342,9 @@ d:\work\minimax_h3\韩老魔的歌舞团\
 
 1. B1：上传的源舞登记进 `dances\`；确认同框名单＝幕沛灵（C 位）、紫灵、文思月，场景＝学校走廊，取最出彩的 10 秒段落
 2. B2：定位三张原始三视图 PNG（红宫装/紫宫装/浅紫宫装，服色天然高对比）+ `scene\学校\场景-学校走廊.png`；images 顺序固定为幕沛灵→紫灵→文思月→走廊
-3. B3：完整版 ffmpeg 按 1fps 抽帧 → Read 全部帧产出节拍表（solo 跳步 → V 字队形横移交叉步 → 大开站位律动 → 侧弓步定格四个舞句）→ 按 `references\ref2va-dance-prompt-guide.md` 写英文七段式提示词（Subject 1 红/C 位 `<Picture 1>`、Subject 2 紫/LEFT `<Picture 2>`、Subject 3 浅紫/RIGHT `<Picture 3>`、Subject 4 走廊 `<Picture 4>` 招牌写 blank sign；summary 写满无黑边、禁拼贴/UI/字幕/可读文字），落 `提示词\trio-corridor-dance.md`
+3. B3：frame-extract 技能按 1fps 抽帧 → Read 全部帧产出节拍表（solo 跳步 → V 字队形横移交叉步 → 大开站位律动 → 侧弓步定格四个舞句）→ 按 `references\ref2va-dance-prompt-guide.md` 写英文七段式提示词（Subject 1 红/C 位 `<Picture 1>`、Subject 2 紫/LEFT `<Picture 2>`、Subject 3 浅紫/RIGHT `<Picture 3>`、Subject 4 走廊 `<Picture 4>` 招牌写 blank sign；summary 写满无黑边、禁拼贴/UI/字幕/可读文字），落 `提示词\trio-corridor-dance.md`
 4. B4：写 job JSON（tag=trio-corridor-dance、seconds=10）→ `--dry-run` 核对 node 6/35/36/37 映射 → 后台跑 `run_t8balance_ref2va.py`（9:16/mp0.86/plus），约 12 分钟 SUCCESS、298 币，成片自动下载到 `video\`
 5. B5：1/3/5/7/8/10 秒抽 6 帧逐帧核验——三人身份零串脸串衣、站位不变、四个舞句齐全、走廊正确、招牌空白、无 UI/黑边/字幕（快速挥臂有自然运动模糊，接受）→ 一次通过
-6. 共享收尾：挑定格帧存 `images\D{NN}_封面.png` → 需要则混音出 `D{NN}.mp4` → 写双平台文案、`publish_episode.py --project dance --episode D{NN}` 发布 → 总纲台账记「路径=B」、资产清单登记三视图/场景图清单与提示词文件
+6. 共享收尾：挑定格帧存 `images\D{NN}_封面.png` → 需要则混音出 `D{NN}.mp4` → 调用 `publish-copywriting` 写双平台文案、`publish_episode.py --project dance --episode D{NN}` 发布 → 总纲台账记「路径=B」、资产清单登记三视图/场景图清单与提示词文件
 
 > 该范例的提示词、payload/submit/result 记录与成片保存在 `d:\work\minimax_h3\三视图直采复刻\`（探索期目录），后续正式任务一律落 `<项目>\D{NN}-*\` 结构。
