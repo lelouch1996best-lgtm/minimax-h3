@@ -21,7 +21,7 @@ description: "3D国漫风人物转真人质感：识别『把{角色}{形象}转
 
 | 项 | 值 |
 |---|---|
-| **生成通道** | **65535 图生图**（gpt-image-2，被审核拒则切 gemini-3-pro-image） |
+| **生成通道** | **65535 图生图**（固定 `gpt-image-2`；**禁用 `gemini-3-pro-image`**，详见「特殊情况」） |
 | 资源包根目录 | `assets\`（当前有 `凡人` 资源包） |
 | 角色目录 | `assets\凡人\character\{角色名}\` |
 | 角色总索引 | `assets\凡人\character\_人物资产索引.md` |
@@ -71,7 +71,7 @@ description: "3D国漫风人物转真人质感：识别『把{角色}{形象}转
 
 ### Step 4 — 65535 生成真人质感图
 
-使用 65535 图生图，模型优先 `gpt-image-2`（被审核拒则自动切 `gemini-3-pro-image`）。
+使用 65535 图生图，模型固定 `gpt-image-2`。**严禁改用 `gemini-3-pro-image`**：它会把人物重新设计成另一张脸（2026-10-01 用户明令）。
 
 参数约定：
 - `input.image`：角色三视图（或用户上传图）转为 base64 data URI
@@ -82,7 +82,7 @@ description: "3D国漫风人物转真人质感：识别『把{角色}{形象}转
   4. **真人质感强化**：ultra photorealistic, real human skin texture with visible pores and fine lines, natural skin tone with subtle blush, real hair strands with individual hairs and flyaways, realistic silk and sheer fabric textures with natural folds and drapery, cinematic natural lighting with soft shadows, shallow depth of field, professional portrait photography, shot on Sony A7R IV with 85mm f/1.4 lens, 8K ultra high detail, real person photo quality
   5. **画幅**：`size` = `9:16`（默认）或 `16:9`，`resolution` = `2k`，`n` = `1`
 - 提交后每 2 秒轮询；成功后下载到 `generated-images\`
-- 如果 gpt-image-2 被安全审核拒绝 → 自动切换 `gemini-3-pro-image` 重试，并告知用户
+- 如果 gpt-image-2 被安全审核拒绝 → **不要切 gemini**；按审核拒绝重试链处理（在 prompt 前置"一位三十岁上下的成年人物，气质沉稳端正。"后重试），仍被拒则停下来报告用户
 
 ### Step 5 — 交付与核验
 
@@ -92,6 +92,7 @@ description: "3D国漫风人物转真人质感：识别『把{角色}{形象}转
   2. 场景自然合理
   3. 真人质感到位
 - 不满意 → 调整方向：
+  - **⚠️ 以下任何"重试 / 重新生成"都属抽卡，须先经用户同意再动手（2026-10-01 用户明令）；不得自己连着摇**
   - 身份走样 → 加强 prompt 中的身份锁定描述重试
   - 真人感不够 → 加强真人质感描述重试
   - 场景不好看 → 换个场景重新生成
@@ -110,7 +111,8 @@ description: "3D国漫风人物转真人质感：识别『把{角色}{形象}转
 |---|---|
 | 角色已有同款真人质感形象 | 直接交付现成图片并说明；用户明确要重新生成时才走流程 |
 | 65535 API Key 未配置 | 按 65535 技能配置流程引导用户 |
-| gpt-image-2 被审核拒 | 自动切换 gemini-3-pro-image 重试 |
+| gpt-image-2 被审核拒 | **不切 gemini**；前置"一位三十岁上下的成年人物，气质沉稳端正。"重试；仍被拒则报告用户 |
+| 任何情况下想用 `gemini-3-pro-image` | **禁止**。该模型出的人物"完全不像"参考图（会把脸重新设计一遍），用户已明令禁用 |
 | 生成后人物身份走样 | 加强面部特征锁定描述后重试 |
 | 任务失败 | 报告 error_code 与 error_message，不盲目重试 |
 

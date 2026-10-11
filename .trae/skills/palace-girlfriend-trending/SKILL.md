@@ -1,11 +1,11 @@
 ---
 name: "palace-girlfriend-trending"
-description: "宫装女友热点播报流水线：抓 B站/抖音热点 → story-craft 写男友POV互动甜妹剧本 → 65535 真人质感参考图（单片图生图、双人多图直传；拆片文生图场景空镜先行→派生各段关键帧，禁止截视频帧）→ t8balance 出片（9:16/mp0.86，拆片才混BGM）→ sau 发布 B站+抖音（首话题取热搜原文）。Invoke when 宫装女友说热点/女友播热点/来一期韩老魔宫装女友，或要双人同框互动、热搜原文作话题、成片发布、拆片选BGM。"
+description: "宫装女友热点播报流水线：抓 B站/抖音热点 → story-craft 写男友POV互动甜妹剧本 → 65535 真人质感参考图（单片图生图、双人多图直传；拆片文生图场景空镜先行→派生各段关键帧，禁止截视频帧）→ t8balance 出片（9:16/mp0.72，拆片才混BGM）→ sau 发布 B站+抖音（首话题取热搜原文）。Invoke when 宫装女友说热点/女友播热点/来一期韩老魔宫装女友，或要双人同框互动、热搜原文作话题、成片发布、拆片选BGM。"
 ---
 
 # 宫装女友热点播报（韩老魔的宫装女友）
 
-流程：trends-hub 抓 B站+抖音热点 → 选题（无合适则自创）→ story-craft 写第一人称男友 POV、带互动节拍的甜妹剧本 → 65535 生成真人质感参考图（单片图生图；拆片＝文生图场景空镜先行、再派生各段关键帧）→ t8balance 出片（9:16/mp0.86/plus，不内置 BGM，单片即成品；拆片关键帧就绪后多段并发）→ **仅拆片集/多段组合**走 Step 5B 拼接与统一 BGM → sau 发布（抖音 5 话题中第 1 个＝热搜标题原文原样）。
+流程：trends-hub 抓 B站+抖音热点 → 选题（无合适则自创）→ story-craft 写第一人称男友 POV、带互动节拍的甜妹剧本 → 65535 生成真人质感参考图（单片图生图；拆片＝文生图场景空镜先行、再派生各段关键帧）→ t8balance 出片（9:16/mp0.72/plus，不内置 BGM，单片即成品；拆片关键帧就绪后多段并发）→ **仅拆片集/多段组合**走 Step 5B 拼接与统一 BGM → sau 发布（抖音 5 话题中第 1 个＝热搜标题原文原样）。
 
 **按需加载**：执行到某一步才读对应参考文件，不要一次全读。
 
@@ -38,8 +38,8 @@ description: "宫装女友热点播报流水线：抓 B站/抖音热点 → stor
 | 男友 POV | 镜头＝男友眼睛，机位固定（仅极轻微呼吸晃）；男友不露脸/躯干、不发声成句；互动三档见下 |
 | 互动档位 | 默认 **L1 邀请式 + L2 求回应式**；**L3**（男友手/前臂边缘入画）须用户明确批准 + 出片后抽帧核验无第二人。细则唯一正本＝`references/interaction-playbook.md` |
 | 出片应用 | t8balance，appId `2095868555916038145`（以 `assets\应用注册表.md` 为准） |
-| 画幅/像素 | `9:16 (Portrait Widescreen)` / megapixels **`0.86`＝1056×1920**（默认）；`1.0`＝1152×2080 仅用户明确要求 |
-| 实例/时长 | `plus`（OOM 升 ultra）；单片 10—15s，mp0.86 可跑满 15s；装不下按编号规矩拆片 |
+| 画幅/像素 | `9:16 (Portrait Widescreen)` / megapixels **`0.72`＝960×1728**（默认）；`0.86`＝1056×1920、`1.0`＝1152×2080 均仅用户明确要求 |
+| 实例/时长 | `plus`（OOM 升 ultra）；单片 10—15s，mp0.72 可跑 14—15s（E14 实测 mp0.72+plus 三段全成功）；装不下按编号规矩拆片 |
 | 画风/对白 | 真人写实 live-action（生活照/手机随手拍，反 CG 反美颜，禁 cinematic/8K/影棚词）；中文口语软糯甜妹，`<d>[Chinese] …</d>`，全程无字幕无屏幕文字 |
 | 参考图生成 | 65535：gpt-image-2 / 9:16 / 2k / n=1；一律 `tools/gen_refs.py`（portrait 图生图；双人 portrait_duo 多图直传；拆片 scene 文生图空镜→keyframe 多图派生关键帧；自动审核重试链），不裸拼 HTTP；基准正本 `assets\真人质感美术基准.md` |
 | BGM 曲库 | `d:\work\minimax_h3\assets\bgm\` + `BGM曲库.md`，全局共享；先查库后生成（get-music） |
@@ -104,7 +104,7 @@ MCP 三步协议（LS → Read 描述 → run_mcp），服务器 `mcp_trends-hub
 
 ## Step 5 — 出片（t8balance）
 
-预锁决策（替 h3-drama-producer 答掉交互，用户另指定除外）：完整剧本直接进分集；产物入对应子目录；node 6=Step4 生成图（拆片＝本段 keyframe；4.5 时双参考）；6A 应用 API；9:16/0.86/plus；时长按剧本；`non_diegetic_music=N/A`。
+预锁决策（替 h3-drama-producer 答掉交互，用户另指定除外）：完整剧本直接进分集；产物入对应子目录；node 6=Step4 生成图（拆片＝本段 keyframe；4.5 时双参考）；6A 应用 API；9:16/0.72/plus；时长按剧本；`non_diegetic_music=N/A`。
 
 - **费用批准门**：确认卡须用户批准；无人值守时指令已含费用授权则放行记账，否则 `update_goal(blocked)` 挂起
 - **拆片衔接**：场景图与全部关键帧出片前预生成并核验；各段 node 6＝本段关键帧，**多段并发**提交（≤3，421 自动退避）；段间剧情接力由提示词承载；**禁止截视频帧作参考**（画质代差导致后段掉质）
@@ -113,7 +113,7 @@ MCP 三步协议（LS → Read 描述 → run_mcp），服务器 `mcp_trends-hub
 - 提示词把互动节拍逐拍译成镜头内可执行动作（playbook §7）；男友只用 `the off-screen person whose viewpoint the camera is` / `off-screen presence`，禁 `her boyfriend`/`a man`/`second person`，男友无 `<d>` 对白；L2 非语言音入 overall_soundscape（整段 ≤2 次、≤1s）；L3 手部安全措辞按 playbook §7
 - 出片后抽帧核验**改用 `frame-extract` 技能出 contact sheet**（OpenCV 直抽，不用 ffmpeg，多帧拼一张联系表，通常 1 张图替代 6—9 次读图）；命令模板与验收口径见 video-production.md
 
-payload 骨架（node 27 秒数 / 28 prompt / 29 aspect_ratio+megapixels / 6 主图 / 35—42 None，无 64/69 节点）、Ref2VA 六段写法、拆片共用片段模板、费用基准（plus/mp0.86/10s≈194—240 币·485—599 秒）、OOM 处置 → **读 `references/video-production.md`**。
+payload 骨架（node 27 秒数 / 28 prompt / 29 aspect_ratio+megapixels / 6 主图 / 35—42 None，无 64/69 节点）、Ref2VA 六段写法、拆片共用片段模板、费用基准（plus/mp0.72/14s≈278—287 币，E14 实测；mp0.86/10s≈194—240 币）、OOM 处置 → **读 `references/video-production.md`**。
 
 ## Step 5B — 多段合成与统一 BGM（仅拆片集/多段组合）
 
@@ -126,6 +126,7 @@ payload 骨架（node 27 秒数 / 28 prompt / 29 aspect_ratio+megapixels / 6 主
 - 剧本/提示词/成片逐一 computer:// 链接交付，成片附费用与耗时
 - **文案撰写统一调用 `publish-copywriting` 技能**（合规/精简/热点原文做话题三条硬要求、文案包格式与模板以该技能为权威）；文案包落盘分集根部，头部必含成片/封面/角色/**热点（与 Step 1 表逐字一致）**
 - 该技能产出：抖音标题 ≤30 字＋话题编号列表 ≤5 个（第 1 条＝热搜原文）；B站标题 ≤80 字带剧名+集号＋标签 10—12 个（第 1 个＝热搜原文）
+- **标题口径（2026-09-30 用户指定）**：精简、留白，**禁止「两个女友」「争宠」「吃醋」「最后却…」等直白噱头与结局剧透**（双人同框集同样不点破），用具体动作/物件/悬念做钩子；细则与正反例以 publish-copywriting 技能「标题风格禁区」为准
 - 用户要发布→Step 7；否则主动询问是否双平台发布
 
 ## Step 7 — 双平台发布（用户要求时）

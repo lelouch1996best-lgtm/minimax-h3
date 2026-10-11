@@ -91,13 +91,28 @@ def resolve_timestamps(args, duration, fps, total):
     return [round((total - 1) * i / (n - 1) / fps, 3) for i in range(n)]
 
 
+def imwrite_safe(path, img, params=None):
+    """写图统一入口。
+
+    cv2.imwrite 在 Windows 上走窄字符 API，**路径含中文时会静默失败**（返回 False
+    但不抛异常），本项目视频/目录名大量使用中文，故改用 imencode + Python 文件写入
+    （Python 的 open 走宽字符 API，中文路径安全）。
+    """
+    ext = os.path.splitext(path)[1] or ".jpg"
+    ok, buf = cv2.imencode(ext, img, params or [])
+    if not ok:
+        return False
+    with open(path, "wb") as f:
+        f.write(buf.tobytes())
+    return True
+
+
 def write_frame(frame, out_dir, name, png):
     ext = ".png" if png else ".jpg"
     path = os.path.join(out_dir, name + ext)
-    if png:
-        cv2.imwrite(path, frame)
-    else:
-        cv2.imwrite(path, frame, [cv2.IMWRITE_JPEG_QUALITY, 92])
+    params = [] if png else [cv2.IMWRITE_JPEG_QUALITY, 92]
+    if not imwrite_safe(path, frame, params):
+        print(f"WARN write failed: {path}")
     return path
 
 
@@ -136,7 +151,8 @@ def build_sheet(frames, cols, sheet_width, out_dir):
         x = pad + c * (sheet_width + pad)
         canvas[y:y + thumb.shape[0], x:x + sheet_width] = thumb
     path = os.path.join(out_dir, "contact_sheet.jpg")
-    cv2.imwrite(path, canvas, [cv2.IMWRITE_JPEG_QUALITY, 88])
+    if not imwrite_safe(path, canvas, [cv2.IMWRITE_JPEG_QUALITY, 88]):
+        sys.exit(f"contact sheet write failed: {path}")
     return path
 
 

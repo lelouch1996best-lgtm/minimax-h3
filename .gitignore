@@ -19,3 +19,6 @@
 **/.DS_Store
 Thumbs.db
 desktop.ini
+
+# 生成临时目录（内含带签名的下载 URL，可能泄露 Access Key）
+**/_gen_tmp/

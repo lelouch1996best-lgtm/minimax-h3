@@ -317,10 +317,14 @@ def build_suno_payload(a):
         raise ValueError("--version 与 --custom-model-id 互斥，只能给一个")
     if a.duration is not None and not a.custom:
         raise ValueError("--duration 仅在 --custom（自定义模式）下可用，范围 10~360")
+    # 自定义模式下歌词走 prompt：--lyrics / --lyrics-file 优先，未给才回退 --prompt
+    prompt = a.prompt
+    if a.lyrics or a.lyrics_file:
+        prompt = a.lyrics or read_text_file(a.lyrics_file)
     payload = {"model": "suno", "version": a.version or a.custom_model_id,
                "custom": a.custom, "instrumental": a.instrumental}
-    if a.prompt:
-        payload["prompt"] = a.prompt
+    if prompt:
+        payload["prompt"] = prompt
     if a.custom:
         if a.title:
             payload["title"] = a.title[:80]

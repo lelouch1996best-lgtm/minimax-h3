@@ -42,6 +42,9 @@ publish_episode.py — 双平台发布固化脚本（B站 + 抖音）· 多项�
 
   # 7) 清理误投/测试稿件
   python publish_episode.py --delete-bili aid=117296378943400
+
+  # 8) 用另一个 B站账号发（不改 PROJECTS，只在本次生效）
+  python publish_episode.py --episode E09 --bili-account hehuajiu
 """
 
 import argparse
@@ -99,6 +102,101 @@ PROJECTS = {
         "dy_account": "douyin_dance",
         "dy_cookie": "douyin_douyin_dance.json",   # sau 命名规则＝douyin_{account}.json（2026-09-20 D02 实测校正）
     },
+    # 2026-10-07 新增：合集类项目（整片一个文件，非分集目录）。
+    # 用法：python publish_episode.py --project guoqing --dir "韩老魔的国庆接待"
+    # episode 由目录名推出（无「-」时即目录名本身），成片在 `成片\`、封面与文案在 `发布\`。
+    "guoqing": {
+        "cn": "韩老魔的国庆接待（7 集合集 · 三平台）",
+        "dir": "韩老魔的国庆接待",
+        "image_dir": "发布",
+        "video_dir": "成片",
+        "record_dir": "任务记录",
+        "video_prefer": ["{ep}-全片.mp4"],
+        "video_prefix": "{ep}-全片",
+        "cover_exclude": "",
+        "bili_account": "bilibili_main",
+        # 2026-10-07 用户指定：抖音改用「秦洛喝花酒」（sau account=qinluo_huajiu）。
+        # 注意该账号同时是快手账号名，且平台昵称与 sau account 名**不同名**
+        # （sau 用拼音 qinluo_huajiu，平台昵称是中文「秦洛喝花酒」）。
+        "dy_account": "qinluo_huajiu",
+        "dy_cookie": "douyin_qinluo_huajiu.json",
+        # 2026-10-09 快手「秦洛喝花酒」账号已注销 → 统一改用「秦洛」
+        "ks_account": "秦洛",               # 快手账号（CLI 无 AI 声明参数）
+    },
+    # 2026-10-08 新增：《这就叫专业》抖音源片复刻（8 段合集 · 三平台）。
+    # 同 guoqing 结构：成片在 `成片\`，封面与文案在 `发布\`。
+    # ⚠️ 抖音源片有烧录字幕 → 复刻版按「默认成片不出字幕」红线**无字幕**，
+    #    仅保留台词音轨 + 后期节拍词，无字幕版更符合三平台审核（AI 声明 + 无字幕更安全）。
+    "zjzhi": {
+        "cn": "这就叫专业（韩立×银月 · 8 段合集 · 三平台）",
+        "dir": "这就叫专业",
+        "image_dir": "发布",
+        "video_dir": "成片",
+        "record_dir": "任务记录",
+        "video_prefer": ["{ep}-全片.mp4"],
+        "video_prefix": "{ep}-全片",
+        "cover_exclude": "",
+        "bili_account": "bilibili_main",
+        "dy_account": "qinluo_huajiu",
+        "dy_cookie": "douyin_qinluo_huajiu.json",
+        # 2026-10-09 快手「秦洛喝花酒」已注销 → 改「秦洛」（当前快手唯一账号，免闸门）
+        "ks_account": "秦洛",
+    },
+    # 2026-10-09 新增：恶搞系列第五集《一脚踹碎》（原创仙侠恶搞 · 三平台）。
+    # 成片在 `法天象地\成片\成片.mp4`（45.63s 竖屏），封面与文案在 `法天象地\发布\`。
+    # ⚠️ episode 固定为「第五集」（目录名推导会得到 "第五集"，故video_prefix 用空串匹配成片.mp4）。
+    "eg5": {
+        "cn": "一脚踹碎法天象地（恶搞仙侠第5集 · 三平台）",
+        "dir": "法天象地",
+        "image_dir": "发布",
+        "video_dir": "成片",
+        "record_dir": "任务记录",
+        "video_prefer": ["{ep}.mp4"],
+        "video_prefix": "",
+        "cover_exclude": "",
+        # 2026-10-09 华先生指定：B站=喝花酒（个人主号）、抖音=qinluo_huajiu、快手=秦洛（第2 个号）
+        "bili_account": "喝花酒",
+        "dy_account": "qinluo_huajiu",
+        "dy_cookie": "douyin_qinluo_huajiu.json",
+        "ks_account": "秦洛",
+    },
+    # 2026-10-09 新增：灵动表情系列《看够了吗》（南宫婉×幕沛灵 · 面部特写 · 三平台）。
+    # 成片在 `南宫婉灵动表情\成片\1.mp4`（30.17s 竖屏，两条 15s 拼接），封面与文案在同目录 `发布\`。
+    # ⚠️ episode 固定为「1」（成片名为纯数字 1.mp4，无集号前缀）→ video_prefix 用空串匹配。
+    "lingdong": {
+        "cn": "看够了吗（南宫婉×幕沛灵 · 灵动表情 · 三平台）",
+        "dir": "南宫婉灵动表情",
+        "image_dir": "发布",
+        "video_dir": "成片",
+        "record_dir": "任务记录",
+        "video_prefer": ["{ep}.mp4"],
+        "video_prefix": "",
+        "cover_exclude": "_src_",
+        # 2026-10-09 华先生指定：B站=bilibili_main、抖音=creator、快手=秦洛
+        "bili_account": "bilibili_main",
+        "dy_account": "creator",
+        "dy_cookie": "douyin_creator.json",
+        "ks_account": "秦洛",
+    },
+    # 2026-10-11 新增：《一脚踩出的坑爹时刻》第1集（韩立 · 原创恶搞 · 四平台）。
+    # 成片在 `成片\1.mp4`（40.15s 竖屏 1080×1944，含 S3 台词字幕），封面与文案在 `发布\`。
+    # ⚠️ episode 固定为「1」（成片名纯数字 1.mp4）→ video_prefix 用空串匹配。
+    # 四平台账号（2026-10-11 用户指定）：B站=bilibili_main、抖音=qinluo_huajiu、快手=秦洛、小红书=秦洛。
+    "kengdie": {
+        "cn": "一脚踩出的坑爹时刻（韩立 · 原创恶搞 · 四平台）",
+        "dir": "一脚踩出的坑爹时刻",
+        "image_dir": "发布",
+        "video_dir": "成片",
+        "record_dir": "任务记录",
+        "video_prefer": ["{ep}.mp4"],
+        "video_prefix": "",
+        "cover_exclude": "_src_",
+        "bili_account": "bilibili_main",
+        "dy_account": "qinluo_huajiu",
+        "dy_cookie": "douyin_qinluo_huajiu.json",
+        "ks_account": "秦洛",
+        "xhs_account": "秦洛",
+    },
 }
 
 CFG = PROJECTS["palace"]        # main() 里按 --project 覆盖
@@ -149,6 +247,72 @@ def load_cookies(path):
     cookies = raw.get("cookie_info", {}).get("cookies") or raw.get("cookies") or []
     header = "; ".join(f"{c['name']}={c['value']}" for c in cookies)
     return header, raw
+
+
+# ---------------------------------------------------------------- 多账号闸门
+
+LIST_ACCOUNTS_HELPER = Path(
+    r"c:\Users\Administrator\.workbuddy\skills\sau-upload\scripts\list_accounts.py")
+
+
+def available_accounts(platform):
+    """读 cookies/ 目录，返回该平台的账号名列表。复用 skill 脚本，避免两处逻辑分叉。"""
+    if not LIST_ACCOUNTS_HELPER.exists():
+        return None                                  # 脚本缺失 → 不拦截（不误伤）
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("sau_list_accounts", LIST_ACCOUNTS_HELPER)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    data = mod.list_accounts(platform)
+    return [it["account"] for it in data.get(platform, [])]
+
+
+def gate_multi_account(platform):
+    """返回需要用户确认的提示行列表；空列表 = 无需确认。
+
+    规则（2026-10-08 华先生明令）：某平台本地有 ≥2 个账号时，
+    即使 PROJECTS 里有默认值，也必须先让用户选，不允许默默发。
+    """
+    notes = {
+        "bilibili_main": "韩老魔的宫装女友",
+        "xiongda": "熊大爱吃青菜",
+        "喝花酒": "秦洛爱喝花酒（用户个人主号）",
+        "creator": "抖音主号",
+        "douyin_dance": "韩老魔的歌舞团",
+        "qinluo_huajiu": "秦洛喝花酒",
+        "秦洛": "快手/小红书账号（2026-10-09 起唯一快手账号；2026-10-10 登录的小红书同账号名）",
+    }
+    targets = []
+    if platform in ("both", "three", "four", "bilibili"):
+        targets.append(("bilibili", CFG["bili_account"]))
+    if platform in ("both", "three", "four", "douyin"):
+        targets.append(("douyin", CFG["dy_account"]))
+    if platform in ("three", "four", "kuaishou"):
+        targets.append(("kuaishou", CFG.get("ks_account", "")))
+    if platform in ("four", "xiaohongshu"):
+        targets.append(("xiaohongshu", CFG.get("xhs_account", "")))
+
+    lines = []
+    for plat, current in targets:
+        accts = available_accounts(plat)
+        if not accts or len(accts) < 2:
+            continue                                   # 0 个（未登录）或 1 个（唯一账号）→ 免问
+        lines.append(f"[{plat}] 本机有 {len(accts)} 个账号：")
+        for a in accts:
+            mark = "  ← 当前默认" if a == current else ""
+            note = notes.get(a, "")
+            lines.append(f"    - {a}{'（' + note + '）' if note else ''}{mark}")
+    if not lines:
+        return []
+    lines += [
+        "",
+        "处理方式（二选一）：",
+        "  A) 重新运行并显式指定，例如：",
+        "     --bili-account <账号> --dy-account <账号> --ks-account <账号>",
+        "  B) 已在别处跟用户确认过账号，补 --confirm-accounts跳过闸门",
+        "或先跑全量枚举：python tools/publish_episode.py --list-accounts",
+    ]
+    return lines
 
 
 # ---------------------------------------------------------------- 定位分集资产
@@ -219,6 +383,11 @@ def resolve_cover(ep_dir, episode, prefer=""):
     imgs = [p for p in idir.glob(f"{episode}*.png")]
     if not imgs:
         imgs = [p for p in idir.glob("*.png")]
+    if not imgs:
+        # 2026-10-09：封面生成器可能落 .jpg（如 tools/ngw_mpl_make_cover.py）→ 补一轮 jpg
+        imgs = [p for p in idir.glob(f"{episode}*.jpg")]
+    if not imgs:
+        imgs = [p for p in idir.glob("*.jpg")]
     ex = CFG.get("cover_exclude") or ""
     if ex:
         imgs = [p for p in imgs if ex not in p.name]
@@ -278,7 +447,11 @@ def parse_topics(dy_block, full_text):
 
 def parse_copy_file(ep_dir, episode):
     """解析《E{NN}-双平台发布文案.txt》；缺失则返回 {}"""
-    cands = sorted(ep_dir.glob(f"{episode}-*发布文案*.txt")) + sorted(ep_dir.glob("*双平台发布文案*.txt"))
+    # 2026-10-07：放宽为任意「*发布文案*.txt」（原先写死「双平台」，
+    # 三平台/单平台文案包匹配不到 → 回退到无文案分支）
+    cands = list(dict.fromkeys(
+        sorted(ep_dir.glob(f"{episode}-*发布文案*.txt"))
+        + sorted(ep_dir.glob("*发布文案*.txt"))))
     if not cands:
         return {}, None
     path = cands[0]
@@ -302,7 +475,8 @@ def parse_copy_file(ep_dir, episode):
         """简介可能多行，压成一行"""
         return dewrap(field(body, label))
 
-    dy, bili = block(r"抖音"), block(r"B\s*站")
+    dy, bili, ks = block(r"抖音"), block(r"B\s*站"), block(r"快手")
+    xhs = block(r"小红书")
     topics, topic_warn = parse_topics(dy, text)
     for w in topic_warn:
         log(f"[!] 抖音话题：{w}")
@@ -326,6 +500,18 @@ def parse_copy_file(ep_dir, episode):
             "title": multi(bili, r"标题"),
             "desc": multi(bili, r"简介"),
             "tags": tags,
+        },
+        # 2026-10-07：快手块（可选；无该块时 title 为空，调用方按需跳过）
+        "kuaishou": {
+            "title": multi(ks, r"标题"),
+            "desc": multi(ks, r"简介"),
+            "tags": [t for t in (dewrap(x) for x in re.split(r"[,，]", field(ks, r"标签"))) if t],
+        },
+        # 2026-10-11：小红书块（可选；无该块时 title 为空，调用方按需跳过）
+        "xiaohongshu": {
+            "title": multi(xhs, r"标题"),
+            "desc": multi(xhs, r"简介"),
+            "tags": [t for t in (dewrap(x) for x in re.split(r"[,，]", field(xhs, r"标签"))) if t],
         },
     }
     return out, path
@@ -420,7 +606,8 @@ def douyin_upload(video, cover, title, desc, topics, dy_code=None, dry_run=False
     out = "\n".join(tail)
 
     res = {"returncode": proc.returncode, "gate_seen": gate_seen,
-           "published": "视频发布成功" in out, "raw_tail": out[-600:]}
+           "published": "视频发布成功" in out, "raw_tail": out[-600:],
+           "cover": cover_status_from_log(out)}
     if "自主声明已选择" in out:
         res["declaration_selected"] = True
     return res
@@ -450,13 +637,124 @@ def douyin_verify(limit=6):
     return out
 
 
+# ---------------------------------------------------------------- 快手
+# 2026-10-07 新增。注意：`sau kuaishou upload-video` **没有 --declaration 参数**
+# （抖音有，快手没有）→ AI 生成标注无法随表单带入，需人工在创作者后台确认。
+
+def kuaishou_upload(video, cover, title, desc, tags, dry_run=False):
+    cmd = [
+        str(SAU_EXE), "kuaishou", "upload-video",
+        "--account", CFG["ks_account"],
+        "--file", str(video),
+        "--headless",
+        "--title", title,
+        "--desc", desc,
+        "--tags", ",".join(tags[:6]),
+        "--thumbnail", str(cover),
+    ]
+    log("\n=== 快手投稿（sau；CLI 无 AI 声明参数，需后台人工确认） ===")
+    log("  " + show_cmd(cmd))
+    if dry_run:
+        return {"dry_run": True, "cmd": cmd}
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            text=True, encoding="utf-8", errors="replace", bufsize=1)
+    tail = []
+    for line in proc.stdout:
+        line = line.rstrip("\n")
+        log("  " + line)
+        tail.append(line)
+    proc.wait()
+    out = "\n".join(tail)
+    hit = [k for k in ("发布成功", "投稿成功", "上传成功", "作品已发布") if k in out]
+    return {"returncode": proc.returncode, "published": bool(hit),
+            "matched": hit, "cover": cover_status_from_log(out), "raw_tail": out[-800:]}
+
+
+def kuaishou_verify():
+    """快手无开放回读接口（对比抖音 creator API），只能以 sau 日志 + 人工后台复核为判据。"""
+    return {"note": "快手 CLI 无回读接口；以投稿日志 + 创作者后台人工复核为准"}
+
+
+# ---------------------------------------------------------------- 小红书
+# 2026-10-11 新增。`sau xiaohongshu upload-video` **没有 --declaration 参数**
+# （抖音有，快手/小红书都没有）→ AI 生成标注无法随表单带入，需人工在创作者后台确认。
+# shell 里现成的 4 平台发布：`--platform four` 会依次跑 B站 → 抖音 → 快手 → 小红书。
+
+def xiaohongshu_upload(video, cover, title, desc, tags, dry_run=False):
+    cmd = [
+        str(SAU_EXE), "xiaohongshu", "upload-video",
+        "--account", CFG.get("xhs_account", ""),
+        "--file", str(video),
+        "--headless",
+        "--title", title[:20],                             # 小红书标题显示上限 20 字
+        "--desc", desc,
+        "--tags", ",".join(tags[:10]),                     # 话题 ≤10 个（写正文/走 tags）
+        "--thumbnail", str(cover),
+    ]
+    log("\n=== 小红书投稿（sau；CLI 无 AI 声明参数，需后台人工确认） ===")
+    log("  " + show_cmd(cmd))
+    if dry_run:
+        return {"dry_run": True, "cmd": cmd}
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            text=True, encoding="utf-8", errors="replace", bufsize=1)
+    tail = []
+    for line in proc.stdout:
+        line = line.rstrip("\n")
+        log("  " + line)
+        tail.append(line)
+    proc.wait()
+    out = "\n".join(tail)
+    hit = [k for k in ("发布成功", "投稿成功", "上传成功", "作品已发布", "发布完成") if k in out]
+    return {"returncode": proc.returncode, "published": bool(hit),
+            "matched": hit, "cover": cover_status_from_log(out), "raw_tail": out[-800:]}
+
+
+def xiaohongshu_verify():
+    """小红书无开放回读接口（同快手），以 sau 日志 + 创作者后台人工复核为判据。"""
+    return {"note": "小红书 CLI 无回读接口；以投稿日志 + 创作者后台人工复核为准"}
+
+
+# ---------------------------------------------------------------- 封面状态解析
+# 2026-10-11：sau 已能回读封面是否真的生效（快手：回读预览图；小红书：回读缩略图）。
+# 生效/失败都会打结构化日志 → 台账不再无脑写「封面同上」，改按日志如实标注。
+COVER_OK_MARKERS = ("封面已应用", "封面已经设置完成", "封面已上传到预览")
+COVER_FAIL_MARKERS = ("封面未生效", "待人工处理")
+
+
+def cover_status_from_log(out: str):
+    """从 sau 输出判定封面应用结果：'ok' / 'fail' / None（未回读到）。"""
+    if any(m in out for m in COVER_FAIL_MARKERS):
+        return "fail"
+    if any(m in out for m in COVER_OK_MARKERS):
+        return "ok"
+    return None
+
+
+def _cover_phrase(res):
+    c = (res or {}).get("cover")
+    if c == "ok":
+        return "封面已应用 ✅"
+    if c == "fail":
+        return "**封面未生效 🚨（需人工到创作者后台更换）**"
+    return "封面状态未知（CLI 未回读）"
+
+
 # ---------------------------------------------------------------- 台账块
 
 def build_markdown(episode, bili_res, bili_ver, dy_res, dy_items, copy_path,
-                   video, cover, ep_dir):
+                   video, cover, ep_dir, ks_res=None, xhs_res=None):
     now = time.strftime("%Y-%m-%d %H:%M")
-    rel = lambda p: str(Path(p).relative_to(series_dir())).replace("\\", "/")  # noqa: E731
-    lines = [f"- **发布状态（{now} 双平台已发布）**："]
+
+    def rel(p):
+        """转项目相对路径。--dir 可能传相对路径（如 `这就叫专业`），
+        直接 relative_to(绝对 series_dir()) 会抛 ValueError（2026-10-08 踩到）→ 先绝对化。"""
+        try:
+            return str(Path(p).resolve().relative_to(series_dir().resolve())).replace("\\", "/")
+        except ValueError:
+            return str(p).replace("\\", "/")
+    lines = [f"- **发布状态（{now} 已发布）**："]
     if bili_res and not bili_res.get("dry_run"):
         bvid = bili_res.get("bvid", "?")
         aid = bili_res.get("aid", "?")
@@ -471,8 +769,20 @@ def build_markdown(episode, bili_res, bili_ver, dy_res, dy_items, copy_path,
         lines.append(
             f"- **抖音投稿**：账号 {CFG['dy_account']!r}，aweme_id **{d['aweme_id']}**，{d['url']} ；"
             f"公开={d['public']}，话题 {len(d['topics'])} 个「{' '.join('#' + t for t in d['topics'])}」"
-            f"，封面同上，自主声明「{AI_DECLARATION}」随发布表单一次选定"
+            f"，{_cover_phrase(dy_res)}，自主声明「{AI_DECLARATION}」随发布表单一次选定"
             + ("；**触发短信验证码门**" if (dy_res or {}).get("gate_seen") else "；未触发短信风控门"))
+    if ks_res and not ks_res.get("dry_run"):
+        lines.append(
+            f"- **快手投稿**：账号 {CFG.get('ks_account')!r}，日志判定 "
+            f"{'已发布' if ks_res.get('published') else '**未确认发布**'}"
+            f"（命中关键词 {ks_res.get('matched') or '无'}），{_cover_phrase(ks_res)}"
+            f"；⚠️ **CLI 无 AI 声明参数**，需后台人工确认是否补「AI 生成」标注")
+    if xhs_res and not xhs_res.get("dry_run"):
+        lines.append(
+            f"- **小红书投稿**：账号 {CFG.get('xhs_account')!r}，日志判定 "
+            f"{'已发布' if xhs_res.get('published') else '**未确认发布**'}"
+            f"（命中关键词 {xhs_res.get('matched') or '无'}），{_cover_phrase(xhs_res)}"
+            f"；⚠️ **CLI 无 AI 声明参数**，需后台人工确认是否补「AI 生成」标注")
     if copy_path:
         lines.append(f"- 发布文案：`{rel(copy_path)}`")
     lines.append(f"- 成片：`{rel(video)}`")
@@ -488,16 +798,64 @@ def main():
                     help="项目：palace 宫装女友（默认）/ dance 歌舞团；决定项目目录、子目录名与账号")
     ap.add_argument("--episode", help="集号，如 E09（palace）/ D01（dance）")
     ap.add_argument("--dir", help="直接指定分集目录（覆盖 --episode 定位）")
-    ap.add_argument("--platform", default="both", choices=["both", "bilibili", "douyin"])
+    # 2026-10-07：新增 three（B站+抖音+快手）与 kuaishou 单平台。
+    # `both` 保持原语义（B站+抖音）不变，保证 palace / dance 行为零变化。
+    ap.add_argument("--platform", default="both",
+                    choices=["both", "three", "four", "bilibili", "douyin", "kuaishou", "xiaohongshu"],
+                    help="both=B站+抖音（默认，原语义）；three=+快手；four=B站+抖音+快手+小红书；或单平台")
+    ap.add_argument("--bili-account", help="覆盖项目的 B站账号标签（如 hehuajiu）；"
+                                           "对应 cookies\\bilibili_<标签>.json，不改动 PROJECTS 原表")
     ap.add_argument("--dry-run", action="store_true", help="只打印将要执行的命令")
     ap.add_argument("--verify-only", action="store_true", help="只回读核验，不发布")
     ap.add_argument("--bili-aid", type=int, help="配合 --verify-only 指定 B站 aid")
     ap.add_argument("--dy-code", help="抖音 6 位短信验证码（已知时直接带上）")
     ap.add_argument("--code-timeout", type=int, default=900, help="等待验证码秒数，默认 900")
     ap.add_argument("--delete-bili", metavar="AID=<id>", help="删除指定 B站稿件（不可逆）")
+    # 2026-10-08 华先生明令：多账号平台发布前必须先给用户选账号，不能默默用默认值。
+    ap.add_argument("--list-accounts", action="store_true",
+                    help="列出本机各平台已登录账号后退出（发布前必跑）")
+    ap.add_argument("--accounts-platform",
+                    choices=["douyin", "kuaishou", "xiaohongshu", "bilibili"],
+                    help="配合 --list-accounts 限定平台（注意与 --platform 不同：后者是发布目标）")
+    ap.add_argument("--check", action="store_true",
+                    help="配合 --list-accounts：逐个调 sau check 验证登录态")
+    ap.add_argument("--json", action="store_true",
+                    help="配合 --list-accounts：机器读输出")
+    ap.add_argument("--dy-account", help="覆盖项目的抖音账号（多账号时必须显式指定）")
+    ap.add_argument("--ks-account", help="覆盖项目的快手账号")
+    ap.add_argument("--xhs-account", help="覆盖项目的小红书账号")
+    ap.add_argument("--confirm-accounts", action="store_true",
+                    help="确认已就账号选择做过用户确认，跳过多账号拦截")
+    # 2026-10-09：同一目录存在多个成片/多份文案包时（如法天象地 45s 版与 24s 版并存），
+    # 按名字排序会选错 → 显式指定绝对路径，不再依赖匹配。
+    ap.add_argument("--video", help="显式指定成片绝对路径（覆盖 resolve_video 自动选取）")
+    ap.add_argument("--copy", help="显式指定发布文案包绝对路径（覆盖自动匹配）")
     args = ap.parse_args()
 
+    if args.list_accounts:
+        # 子进程跑（不能用 runpy：会把宿主 sys.argv 一并带进去）
+        if not LIST_ACCOUNTS_HELPER.exists():
+            raise SystemExit(f"[X] 缺少账号枚举脚本：{LIST_ACCOUNTS_HELPER}")
+        cmd = [sys.executable, str(LIST_ACCOUNTS_HELPER)]
+        if args.accounts_platform:
+            cmd += ["--platform", args.accounts_platform]
+        if args.check:
+            cmd.append("--check")
+        if args.json:
+            cmd.append("--json")
+        return subprocess.call(cmd)
+
     CFG = PROJECTS[args.project]
+    if args.bili_account or args.dy_account or args.ks_account or args.xhs_account:
+        # 复制一份再改写，避免污染 PROJECTS 原表（同一进程内多项目复用时的隐患）
+        CFG = dict(CFG)
+        for key, val in (("bili_account", args.bili_account),
+                         ("dy_account", args.dy_account),
+                         ("ks_account", args.ks_account),
+                         ("xhs_account", args.xhs_account)):
+            if val:
+                CFG[key] = val
+                log(f"{key}：已覆盖为 {val!r}")
     log(f"项目：{CFG['cn']}（{CFG['dir']}）")
 
     if args.delete_bili:
@@ -523,25 +881,83 @@ def main():
         return 0
 
     copy_data, copy_path = parse_copy_file(ep_dir, episode)
+    # 2026-10-09：--copy 显式指定文案包（如同目录并存多版本文案）
+    if args.copy:
+        p = Path(args.copy)
+        if not p.is_file():
+            raise SystemExit(f"[X] --copy 指定的文案包不存在：{p}")
+        copy_data = parse_copy_file(p.parent, p.name.split("-")[0])[0] or {}
+        copy_path = p
+    # 2026-10-09：把文案包原文带进 copy_data，供分平台封面解析复用各平台块的「封面」行。
+    if copy_path and copy_path.is_file():
+        copy_data["_raw"] = copy_path.read_text(encoding="utf-8", errors="replace")
     if copy_path:
         log(f"文案包：{copy_path.name}")
     else:
         log("[!] 未找到发布文案包，将要求命令行提供标题/简介（本脚本不含创作文案）")
 
     video = resolve_video(ep_dir, episode)
+    # 2026-10-09：--video 显式指定成片（同目录并存精简版/完整版时用）
+    if args.video:
+        v = Path(args.video)
+        if not v.is_file():
+            raise SystemExit(f"[X] --video 指定的成片不存在：{v}")
+        video = v
     cover = resolve_cover(ep_dir, episode, copy_data.get("cover", ""))
     log(f"成片：{video.name}（{video.stat().st_size:,} 字节）")
     log(f"封面：{cover.name}" + ("（文案包指定）" if copy_data.get("cover") else "（自动选取）"))
+
+    # 2026-10-09：B站要 16:9、抖音/快手要 3:4 —— 三平台不能共用同一张封面。
+    # 文案包头部/各平台块里若写了 `- **封面**：` 路径，优先按平台取；否则在封面所在目录
+    # 按「封面_{平台名}」或含平台关键词的文件名找；都没有则退回共用cover。
+    def _cover_for(platform_keys, base_cover):
+        block_body = ""
+        for name in platform_keys:
+            m = re.search(rf"^##[^\n]*{name}[^\n]*$(.*?)(?=^##[^\n]*$|\Z)",
+                          copy_data.get("_raw", ""), re.S | re.M)
+            if m:
+                block_body = m.group(1)
+                break
+        cm = (re.search(r"封面[^\n]*?`([^`]+?\.(?:png|jpg|jpeg))`", block_body, re.I)
+              or re.search(r"封面[^\n]*?([^\s`（(]+\.(?:png|jpg|jpeg))", block_body, re.I))
+        if cm:
+            cand = Path(cm.group(1).strip())
+            for c in ([cand] if cand.is_absolute()
+                      else [series_dir() / cand, ep_dir / cand]):
+                if c.is_file():
+                    return c
+        cdir = base_cover.parent
+        pats = [f"封面_{k}" for k in platform_keys] + list(platform_keys)
+        for pat in pats:
+            hits = sorted(cdir.glob(f"*{pat}*.jpg")) + sorted(cdir.glob(f"*{pat}*.png"))
+            if hits:
+                return hits[0]
+        return base_cover
+
+    cover_dy = _cover_for(["抖音", "dy"], cover)
+    cover_ks = _cover_for(["快手", "kuaishou"], cover)
+    cover_xhs = _cover_for(["小红书", "xhs"], cover)
+    if (cover_dy != cover) or (cover_ks != cover) or (cover_xhs != cover):
+        log(f"分平台封面：抖音={cover_dy.name}　快手={cover_ks.name}　小红书={cover_xhs.name}")
 
     by, bl = copy_data.get("douyin", {}), copy_data.get("bilibili", {})
     if not bl.get("title"):
         raise SystemExit("[X] 解析不到 B站标题，请检查文案包格式或改用人工发布")
 
+    # 2026-10-08 华先生明令：多账号平台发布前必须先让用户选账号。
+    # PROJECTS 里的账号只是历史默认值，不代表用户本次的选择 —— 未显式确认就中止。
+    if not args.confirm_accounts and not args.dry_run:
+        gate = gate_multi_account(args.platform)
+        if gate:
+            raise SystemExit(
+                "\n".join(["[X] 多账号平台未确认账号，已中止发布（--dry-run 不受此限制）", ""]
+                          + gate))
+
     bili_res = bili_ver = None
     dy_res = None
     dy_items = []
 
-    if args.platform in ("both", "bilibili"):
+    if args.platform in ("both", "three", "four", "bilibili"):
         bili_res = bili_upload(video, cover, bl["title"], bl["desc"], bl["tags"],
                                dry_run=args.dry_run)
         if not args.dry_run and bili_res.get("aid"):
@@ -552,10 +968,10 @@ def main():
             ok = bili_ver.get("decl_id") == 1
             log(f">>> 创作声明核验：{'PASS（一次到位）' if ok else 'FAIL —— 需走兜底补设'}")
 
-    if args.platform in ("both", "douyin"):
+    if args.platform in ("both", "three", "four", "douyin"):
         if not by.get("title"):
             raise SystemExit("[X] 解析不到抖音标题")
-        dy_res = douyin_upload(video, cover, by["title"], by["desc"], by["topics"],
+        dy_res = douyin_upload(video, cover_dy, by["title"], by["desc"], by["topics"],
                                dy_code=args.dy_code, dry_run=args.dry_run,
                                code_timeout=args.code_timeout)
         if not args.dry_run and dy_res.get("gate_timeout"):
@@ -567,24 +983,89 @@ def main():
             for d in dy_items[:2]:
                 log(f"  {d['aweme_id']} public={d['public']} topics={len(d['topics'])} -> {d['topics']}")
 
+    ks_res = None
+    if args.platform in ("three", "four", "kuaishou"):
+        ksd = copy_data.get("kuaishou", {})
+        if not ksd.get("title"):
+            log("[!] 文案包无快手块（或缺标题），跳过快手")
+        else:
+            ks_res = kuaishou_upload(video, cover_ks, ksd["title"], ksd.get("desc", ""),
+                                     ksd.get("tags", []), dry_run=args.dry_run)
+            if not args.dry_run:
+                log("\n--- 快手核验 ---")
+                log("  " + json.dumps(kuaishou_verify(), ensure_ascii=False))
+                log("  （快手无开放回读接口，请以创作者后台为准）")
+
+    xhs_res = None
+    if args.platform in ("four", "xiaohongshu"):
+        xsd = copy_data.get("xiaohongshu", {})
+        if not xsd.get("title"):
+            log("[!] 文案包无小红书块（或缺标题），跳过小红书")
+        else:
+            xhs_res = xiaohongshu_upload(video, cover_xhs, xsd["title"], xsd.get("desc", ""),
+                                         xsd.get("tags", []), dry_run=args.dry_run)
+            if not args.dry_run:
+                log("\n--- 小红书核验 ---")
+                log("  " + json.dumps(xiaohongshu_verify(), ensure_ascii=False))
+                log("  （小红书无开放回读接口，请以创作者后台为准）")
+
     if args.dry_run:
         return 0
 
     # 结果落盘 + 台账块
-    result = {
+    this_run = {
         "episode": episode,
         "time": time.strftime("%Y-%m-%d %H:%M:%S"),
         "video": str(video), "cover": str(cover),
         "bilibili": {"upload": bili_res, "verify": bili_ver},
         "douyin": {"upload": dy_res, "recent": dy_items[:2]},
+        "kuaishou": {"upload": ks_res},
+        "xiaohongshu": {"upload": xhs_res},
     }
     rec = ep_dir / CFG["record_dir"]
     rec.mkdir(exist_ok=True)
-    (rec / "publish_result.json").write_text(
+    result_file = rec / "publish_result.json"
+
+    # 2026-10-11：单平台补发必须与既有台账**合并**，不得覆盖 ——
+    # 补发快手时曾把 B站/抖音/小红书的完整记录冲成只剩快手。
+    prev = {}
+    if result_file.exists():
+        try:
+            prev = json.loads(result_file.read_text(encoding="utf-8"))
+        except Exception:
+            prev = {}
+
+    def _keep(key):
+        """本轮该平台没发（upload 为空）→ 沿用既有记录。"""
+        cur = this_run[key]
+        if not cur.get("upload"):
+            old = prev.get(key)
+            if old and old.get("upload"):
+                log(f"[i] 本轮未发布 {key}，台账沿用既有记录")
+                return old
+        return cur
+
+    platforms = ("bilibili", "douyin", "kuaishou", "xiaohongshu")
+    result = dict(this_run)
+    for _k in platforms:
+        result[_k] = _keep(_k)
+
+    if any(result[_k] is not this_run[_k] for _k in platforms):
+        # 有沿用项 = 本轮属补发：保留首发时间，另记本轮时间
+        result["time"] = prev.get("time", this_run["time"])
+        result["last_run_time"] = this_run["time"]
+
+    result_file.write_text(
         json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    md = build_markdown(episode, bili_res, bili_ver or {}, dy_res, dy_items,
-                        copy_path, video, cover, ep_dir)
+    md = build_markdown(episode,
+                        result["bilibili"].get("upload"),
+                        result["bilibili"].get("verify") or {},
+                        result["douyin"].get("upload"),
+                        result["douyin"].get("recent") or [],
+                        copy_path, video, cover, ep_dir,
+                        ks_res=result["kuaishou"].get("upload"),
+                        xhs_res=result["xiaohongshu"].get("upload"))
     (rec / "publish_taizhang_block.md").write_text(md, encoding="utf-8")
     log("\n=== 台账块（可直接粘贴进总纲/资产清单，亦已存 任务记录/publish_taizhang_block.md） ===")
     log(md)

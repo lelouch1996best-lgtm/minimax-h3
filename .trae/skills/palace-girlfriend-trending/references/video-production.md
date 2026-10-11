@@ -11,7 +11,7 @@
 | 提示词落位 | `提示词\`：单片 `E{NN}.md`，拆片段 `E{NN}A.md`/`E{NN}B.md`；成片 `video\`、配音 `voice\`、回执 `任务记录\` |
 | 角色资产 | Step 4 生成图（拆片：场景图派生的各段关键帧），跳过角色/场景检索；4.5 时 node 6 三视图 + node 35 场景图 |
 | 提交方式 | 6A 应用 API · t8balance |
-| 画幅/像素 | 9:16 / 0.86（用户明确才改 1.0） |
+| 画幅/像素 | 9:16 / 0.72（默认，960×1728；用户明确才改 0.86/1.0） |
 | 实例 | plus（多参考负载/OOM 升 ultra） |
 | 时长 | 按剧本，单片 10—15s |
 | 音频 | `non_diegetic_music=N/A`、overall_soundscape 只写环境音与人声；拆片统一 BGM 延后 Step 5B |
@@ -43,10 +43,10 @@
 ```json
 {
   "nodeInfoList": [
-    {"nodeId": "27", "fieldName": "value", "fieldValue": "<秒数：10—15，mp0.86 单片可填 15>"},
+    {"nodeId": "27", "fieldName": "value", "fieldValue": "<秒数：10—15，mp0.72 单片可填 14—15>"},
     {"nodeId": "28", "fieldName": "prompt", "fieldValue": "<Ref2VA 六段提示词>"},
     {"nodeId": "29", "fieldName": "aspect_ratio", "fieldValue": "9:16 (Portrait Widescreen)"},
-    {"nodeId": "29", "fieldName": "megapixels", "fieldValue": "0.86"},
+    {"nodeId": "29", "fieldName": "megapixels", "fieldValue": "0.72"},
     {"nodeId": "6",  "fieldName": "image", "fieldValue": "openapi/<hash>.png  ← Step 4 生成图（拆片＝本段 keyframe 关键帧；4.5：node 6=三视图）"},
     {"nodeId": "35", "fieldName": "image", "fieldValue": "None  ← 4.5 时填场景图"},
     {"nodeId": "36", "fieldName": "image", "fieldValue": "None"},
@@ -114,8 +114,9 @@ python "d:\work\minimax_h3\.trae\skills\frame-extract\scripts\extract_frames.py"
 
 | 配置 | 费用（币） | 耗时（秒） |
 |---|---|---|
+| plus / 9:16 / mp0.72 / 14s / 双人同框（960×1728，E14 实测三段） | 278—287 | 693—716 |
 | plus / 9:16 / mp0.86 / 10s / 单参考（1056×1920） | 194—240 | 485—599 |
 | plus / mp1.0 / 10s（1152×2080，含早期双参考因素，仅粗估） | 289—293 | 722—732 |
 | 15s 干净 plus 基准 | 待首跑如实回填，不做线性臆造 | — |
 
-早期双参考图约 258—309 币、640—770 秒；低像素实例（如 mp0.72）费用更低。余额不足时展示估算请用户充值。
+mp0.72 为默认档（费用低于 mp0.86；E14 实测 mp0.72/14s≈278—287 币、693—716 秒）。早期双参考图约 258—309 币、640—770 秒。余额不足时展示估算请用户充值。

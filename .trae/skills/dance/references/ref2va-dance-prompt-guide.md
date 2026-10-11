@@ -55,8 +55,11 @@ summary:
   - native vertical 9:16, filling frame edge to edge, no black bars/pillarbox/letterbox
   - <Picture N> provide only identity/costume guidance; three-view sheet layouts and
     plain backgrounds are never reproduced
-  - No phone screen interface, status bar, battery icon, subtitles, captions, watermarks,
-    or on-screen text
+  - No phone screen interface, status bar, battery icon, watermarks, or on-screen text
+  - 🔴 无字幕强制条款（逐字写，勿改写）：No subtitles, captions, or on-screen text
+    appear at any point in the video.（官方唯一有效手段，自造 ABSOLUTE RULE 长禁令实测
+    零改善甚至更差，不要叠加；舞蹈无台词也不得出现任何字幕/贴字）
+  招牌、海报、logo一律写 rendered as completely blank, unreadable neutral surfaces
 
 retention_analysis:
 <Subject N> (appears in [Shot x]...): fully_preserved - 该角色每一镜保留的五官/发型/服装
@@ -107,7 +110,7 @@ non_diegetic_music:
 1. 每个角色身份一致（不换脸/不串衣/服色位置正确）
 2. 舞句与节拍表吻合（跳/进/律动/定格四个阶段都在）
 3. 场景透视正确、无三视图拼版白底泄漏
-4. 无手机 UI/字幕/水印/黑边
+4. **🔴 无字幕/无 UI/无水印/无黑边（一票否决）**：均匀联系表**不足以**判定，按 **0.6s 间隔**裁画面 **0.6H–0.8H** 密集扫一遍字幕带；发现字幕一律不得交付，须报用户并取得重跑批准
 5. 无多臂多腿等畸形（高速挥臂处允许自然运动模糊）
 
 不合格 → 针对问题改提示词对应段重跑（身份问题强化 retention 与站位锚定；动作问题改 [Shot]

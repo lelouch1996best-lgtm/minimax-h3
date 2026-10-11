@@ -30,22 +30,80 @@ ffprobe + volumedetect 校验 → merge_summary.json 落盘」固化为一条命
 import argparse
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 
-FFMPEG = subprocess.run(
-    [sys.executable, "-c", "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())"],
-    capture_output=True, text=True).stdout.strip()
+def _find_ffmpeg():
+    """
+    定位 ffmpeg。本机 ffmpeg 不在 PATH，需从 imageio_ffmpeg 取二进制；
+    但 imageio_ffmpeg 只装在 venv（…/envs/default）里，managed python 没有 →
+    直接扫已知安装位置，不依赖当前解释器（2026-10-08 踩坑：WinError 87）。
+    """
+    import glob as _g
+    cands = []
+    site = os.path.expandvars(
+        r"%USERPROFILE%\.workbuddy\binaries\python\envs\default\Lib\site-packages"
+        r"\imageio_ffmpeg\binaries")
+    cands += _g.glob(os.path.join(site, "ffmpeg*.exe"))
+    try:
+        import imageio_ffmpeg
+        cands.append(imageio_ffmpeg.get_ffmpeg_exe())
+    except Exception:
+        pass
+    cands = [c for c in cands if c and os.path.exists(c)]
+    if not cands:
+        raise SystemExit("[X] 找不到 ffmpeg：请 pip install imageio_ffmpeg 到 venv")
+    return cands[0]
+
+
+FFMPEG = _find_ffmpeg()
 FFPROBE = os.path.join(os.path.dirname(FFMPEG), "ffprobe.exe")
 if not os.path.exists(FFPROBE):
     FFPROBE = "ffprobe"
+# 2026-10-06：本机 imageio-ffmpeg 只带 ffmpeg、不带 ffprobe，且系统 PATH 无 ffprobe；
+# 探测改为「ffprobe 优先，缺失时用 ffmpeg -i 的 stderr 解析等价结构」，避免整条 5B 流程在最后一步卡死。
+HAS_FFPROBE = os.path.exists(FFPROBE) or (shutil.which(FFPROBE) is not None)
 
 
 def probe(path):
-    r = subprocess.run([FFPROBE, "-v", "error", "-print_format", "json",
-                        "-show_format", "-show_streams", path],
+    if HAS_FFPROBE:
+        r = subprocess.run([FFPROBE, "-v", "error", "-print_format", "json",
+                            "-show_format", "-show_streams", path],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        return json.loads(r.stdout)
+    return probe_with_ffmpeg(path)
+
+
+def probe_with_ffmpeg(path):
+    """ffprobe 缺失时的等价实现：解析 `ffmpeg -i` 的 stderr，产出与 ffprobe 同构的字典。"""
+    r = subprocess.run([FFMPEG, "-hide_banner", "-i", path],
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
-    return json.loads(r.stdout)
+    txt = (r.stderr or "") + (r.stdout or "")
+    m = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", txt)
+    duration = (int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))) if m else 0.0
+    streams = []
+    for line in txt.splitlines():
+        s = line.strip()
+        if not s.startswith("Stream #"):
+            continue
+        if "Video:" in s:
+            vm = re.search(r"(\d{2,5})x(\d{2,5})", s)
+            cm = re.search(r"Video:\s*([A-Za-z0-9_]+)", s)
+            streams.append({"codec_type": "video",
+                            "codec_name": (cm.group(1).lower() if cm else "unknown"),
+                            "width": int(vm.group(1)) if vm else 0,
+                            "height": int(vm.group(2)) if vm else 0})
+        elif "Audio:" in s:
+            am = re.search(r"Audio:\s*([A-Za-z0-9_]+)", s)
+            sr = re.search(r"(\d+)\s*Hz", s)
+            ch = 2 if "stereo" in s else (1 if "mono" in s else None)
+            streams.append({"codec_type": "audio",
+                            "codec_name": (am.group(1).lower() if am else "unknown"),
+                            "sample_rate": sr.group(1) if sr else None,
+                            "channels": ch})
+    return {"format": {"duration": str(duration)}, "streams": streams}
 
 
 def dur(path):
@@ -73,6 +131,13 @@ def main():
     ap.add_argument("--bgm-volume", type=float, default=0.25)
     ap.add_argument("--fade-in", type=float, default=0.5)
     ap.add_argument("--fade-out", type=float, default=1.6)
+    ap.add_argument("--dialogue-volume", type=float, default=1.0,
+                    help="对话/环境主轨音量倍数（默认 1.0 不改动）")
+    ap.add_argument("--no-normalize", action="store_true",
+                    help="关闭 amix 的 normalize。默认 normalize=1 会把两条输入各衰减 "
+                         "1/2（≈ -6 dB），导致人声与 BGM 一起被压低")
+    ap.add_argument("--limiter", type=float, default=0.0, metavar="LIMIT",
+                    help="在最后串一级 alimiter 限幅（如 0.95）防削波；默认 0 = 不加")
     ap.add_argument("--no-summary", action="store_true")
     a = ap.parse_args()
 
@@ -114,20 +179,30 @@ def main():
     if a.bgm:
         bd = dur(a.bgm)
         fade_st = max(D - a.fade_out, 0)
-        chain = (f"[1:a]aloop=loop=-1:size=2e9,atrim=0:{D},"
+        norm = 0 if a.no_normalize else 1
+        limit_tail = (f";[mix]alimiter=limit={a.limiter}:level=disabled[a]"
+                      if a.limiter else "")
+        amix_out = "[mix]" if a.limiter else "[a]"
+        chain = (f"[0:a]volume={a.dialogue_volume}[dial];"
+                 f"[1:a]aloop=loop=-1:size=2e9,atrim=0:{D},"
                  f"volume={a.bgm_volume},"
                  f"afade=t=in:st=0:d={a.fade_in},"
                  f"afade=t=out:st={fade_st:.3f}:d={a.fade_out}[bgm];"
-                 f"[0:a][bgm]amix=inputs=2:duration=first:dropout_transition=0[a]")
+                 f"[dial][bgm]amix=inputs=2:normalize={norm}:"
+                 f"duration=first:dropout_transition=0{amix_out}{limit_tail}")
         r = run_quiet([FFMPEG, "-y", "-i", joined, "-i", a.bgm,
                        "-filter_complex", chain, "-map", "0:v", "-map", "[a]",
                        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", out])
-        if not os.path.exists(out):
+        if not os.path.exists(out) or os.path.getsize(out) == 0:
             raise SystemExit(f"[X] 混音失败：\n{r.stderr[-2000:]}")
         bgm_info = {"file": os.path.basename(a.bgm), "source_duration": round(bd, 3),
                     "looped": bd < D, "volume": a.bgm_volume,
                     "fade_in": a.fade_in,
-                    "fade_out": f"st={fade_st:.3f} d={a.fade_out}"}
+                    "fade_out": f"st={fade_st:.3f} d={a.fade_out}",
+                    "dialogue_volume": a.dialogue_volume,
+                    "amix_normalize": norm,
+                    "limiter": a.limiter or None,
+                    "filter_chain": chain}
         print(f"混音完成：{'aloop 循环铺满（源曲短于成片）' if bd < D else '单遍铺满'}，"
               f"volume={a.bgm_volume}")
     else:
