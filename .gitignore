@@ -1,11 +1,12 @@
-# ===== 只跟踪 .trae / assets / tools 三个目录，其余全部忽略 =====
+# ===== 只跟踪 .workbuddy/skills / assets / tools 三个目录，其余全部忽略 =====
 *
 !*/
 !.gitignore
 !.gitattributes
 
-!.trae/
-!.trae/**
+!.workbuddy/
+!.workbuddy/skills/
+!.workbuddy/skills/**
 
 !assets/
 !assets/**

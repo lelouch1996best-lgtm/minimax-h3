@@ -197,6 +197,29 @@ PROJECTS = {
         "ks_account": "秦洛",
         "xhs_account": "秦洛",
     },
+    # 2026-10-12 新增：《黄毛我只是个演员》复刻版（凡人 IP 演现代段子 · 四平台）。
+    # 成片（B站）：`成片\1.mp4`（1944×1080 横屏 9:5 / 30fps / 63.94s / 10-bit HEVC，含烧录字幕，用户自加）
+    # 成片（抖音/快手/小红书）：`发布\黄毛我只是个演员_竖屏版.mp4`
+    #     （1080×1920 竖屏 9:16 / H.264 8-bit，上下模糊填充、画面不裁切）
+    # 文案与封面在 `发布\`。⚠️ episode 固定为「1」（成片名纯数字 1.mp4）→ video_prefix 用空串匹配。
+    # 四平台账号（2026-10-12 用户指定）：B站=bilibili_main、抖音=qinluo_huajiu、快手=秦洛、小红书=秦洛。
+    "huangmao": {
+        "cn": "黄毛我只是个演员（凡人 IP 复刻 · 四平台）",
+        "dir": "黄毛我只是个演员",
+        "image_dir": "发布",
+        "video_dir": "成片",
+        "record_dir": "任务记录",
+        "video_prefer": ["{ep}.mp4"],
+        "video_prefix": "",
+        "cover_exclude": "",
+        # 2026-10-12 用户明确：**不要竖屏适配版**，四平台统一用横屏原片
+        "video_by_platform": {},
+        "bili_account": "bilibili_main",
+        "dy_account": "qinluo_huajiu",
+        "dy_cookie": "douyin_qinluo_huajiu.json",
+        "ks_account": "秦洛",
+        "xhs_account": "秦洛",
+    },
 }
 
 CFG = PROJECTS["palace"]        # main() 里按 --project 覆盖
@@ -364,6 +387,58 @@ def resolve_video(ep_dir, episode):
     return mp4s[0]
 
 
+# ---------------------------------------------------------------- 成片方向探测
+
+FFMPEG_CANDIDATES = [
+    # 本机 PATH 无 ffmpeg；venv 内 imageio_ffmpeg 自带一份
+    Path(r"C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Lib\site-packages"
+         r"\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe"),
+]
+
+_LAND_CACHE = {}
+
+
+def _ffmpeg_exe():
+    for c in FFMPEG_CANDIDATES:
+        if c.is_file():
+            return c
+    try:
+        import imageio_ffmpeg                       # type: ignore
+        p = Path(imageio_ffmpeg.get_ffmpeg_exe())
+        if p.is_file():
+            return p
+    except Exception:
+        pass
+    return None
+
+
+def video_is_landscape(path):
+    """成片是否横版（宽 > 高）。探测不出返回 None（调用方必须容忍）。
+
+    用途：小红书封面要「跟成片同向」——横版成片配横版封面（2026-10-12 用户指定）。
+    """
+    if not path:
+        return None
+    key = str(path)
+    if key in _LAND_CACHE:
+        return _LAND_CACHE[key]
+    res = None
+    ff = _ffmpeg_exe()
+    if ff:
+        try:
+            out = subprocess.run(
+                [str(ff), "-hide_banner", "-i", key],
+                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                timeout=30).stderr.decode("utf-8", "ignore")
+            m = re.search(r"Video:.*?(\d{2,5})x(\d{2,5})", out, re.S)
+            if m:
+                res = int(m.group(1)) > int(m.group(2))
+        except Exception:
+            res = None
+    _LAND_CACHE[key] = res
+    return res
+
+
 def resolve_cover(ep_dir, episode, prefer=""):
     """封面解析：优先用文案包「封面」行指定的图（2026-09-20 起），否则按文件名取第一张。
 
@@ -395,6 +470,24 @@ def resolve_cover(ep_dir, episode, prefer=""):
         raise SystemExit(f"[X] 未找到封面参考图：{idir}")
     imgs.sort(key=lambda p: p.name)
     return imgs[0]
+
+
+def resolve_video_for(platform, ep_dir, base_video):
+    """按平台取成片（2026-10-12 新增）。
+
+    项目配置 `video_by_platform` 里写了该平台专属成片（如竖屏适配版）就用它，
+    否则沿用主成片。典型场景：横屏片发 B站、竖屏适配片发抖音/快手/小红书。
+    路径可为绝对路径，或相对项目根 / 分集目录。
+    """
+    rel = (CFG.get("video_by_platform") or {}).get(platform)
+    if not rel:
+        return base_video
+    p = Path(rel)
+    for c in ([p] if p.is_absolute() else [series_dir() / p, ep_dir / p]):
+        if c.is_file():
+            return c
+    log(f"[!] {platform} 专属成片不存在（{rel}），退回主成片 {base_video.name}")
+    return base_video
 
 
 # ---------------------------------------------------------------- 文案包解析
@@ -681,13 +774,33 @@ def kuaishou_verify():
 # （抖音有，快手/小红书都没有）→ AI 生成标注无法随表单带入，需人工在创作者后台确认。
 # shell 里现成的 4 平台发布：`--platform four` 会依次跑 B站 → 抖音 → 快手 → 小红书。
 
+XHS_TITLE_LIMIT = 20                                       # 小红书标题硬上限
+
+
+def _xhs_title(title, limit=XHS_TITLE_LIMIT):
+    """按 UTF-16 code unit 截断标题（emoji 占 2）。
+
+    ⚠️ 不能用 title[:20]：小红书按 UTF-16 计数，Python len() 把 emoji 算 1 个字符，
+    于是「19 个汉字 + 1 个 emoji」在 Python 里 len=20 看着合规，小红书却显示 21/20
+    → 前端校验不过 → 「发布」按钮点了毫无反应、死循环重试（2026-10-12 踩到）。
+    """
+    buf, used = [], 0
+    for ch in title:
+        w = 2 if ord(ch) > 0xFFFF else 1
+        if used + w > limit:
+            break
+        buf.append(ch)
+        used += w
+    return "".join(buf)
+
+
 def xiaohongshu_upload(video, cover, title, desc, tags, dry_run=False):
     cmd = [
         str(SAU_EXE), "xiaohongshu", "upload-video",
         "--account", CFG.get("xhs_account", ""),
         "--file", str(video),
         "--headless",
-        "--title", title[:20],                             # 小红书标题显示上限 20 字
+        "--title", _xhs_title(title),                      # 小红书标题上限 20（UTF-16 计，emoji 占 2）
         "--desc", desc,
         "--tags", ",".join(tags[:10]),                     # 话题 ≤10 个（写正文/走 tags）
         "--thumbnail", str(cover),
@@ -724,12 +837,17 @@ COVER_FAIL_MARKERS = ("封面未生效", "待人工处理")
 
 
 def cover_status_from_log(out: str):
-    """从 sau 输出判定封面应用结果：'ok' / 'fail' / None（未回读到）。"""
-    if any(m in out for m in COVER_FAIL_MARKERS):
-        return "fail"
-    if any(m in out for m in COVER_OK_MARKERS):
-        return "ok"
-    return None
+    """从 sau 输出判定封面应用结果：'ok' / 'fail' / None（未回读到）。
+
+    ⚠️ 必须按**最后一次出现**的标记判定，不能「只要出现过 fail 就算 fail」：
+    快手是「先试一次→未生效→重试→成功」，日志里 'fail' 和 'ok' 会同时出现，
+    旧写法把已经成功的封面误判为「封面未生效 🚨」（2026-10-12 踩到）。
+    """
+    last_ok = max((out.rfind(m) for m in COVER_OK_MARKERS), default=-1)
+    last_fail = max((out.rfind(m) for m in COVER_FAIL_MARKERS), default=-1)
+    if last_ok < 0 and last_fail < 0:
+        return None
+    return "ok" if last_ok > last_fail else "fail"
 
 
 def _cover_phrase(res):
@@ -910,7 +1028,10 @@ def main():
     # 2026-10-09：B站要 16:9、抖音/快手要 3:4 —— 三平台不能共用同一张封面。
     # 文案包头部/各平台块里若写了 `- **封面**：` 路径，优先按平台取；否则在封面所在目录
     # 按「封面_{平台名}」或含平台关键词的文件名找；都没有则退回共用cover。
-    def _cover_for(platform_keys, base_cover):
+    # 2026-10-12：再加「方向」维度——封面要与该平台成片同向（横版片配横版封面，避免
+    #   竖封面配横视频的错配）。文件名约定 `封面_{平台}_横` / `封面_{平台}_竖`；
+    #   未标方向的旧文件视作通用：横版时优先 `_横`、竖版时优先 `_竖`。
+    def _cover_for(platform_keys, base_cover, video_path=None):
         block_body = ""
         for name in platform_keys:
             m = re.search(rf"^##[^\n]*{name}[^\n]*$(.*?)(?=^##[^\n]*$|\Z)",
@@ -928,15 +1049,32 @@ def main():
                     return c
         cdir = base_cover.parent
         pats = [f"封面_{k}" for k in platform_keys] + list(platform_keys)
+        hits, seen = [], set()
         for pat in pats:
-            hits = sorted(cdir.glob(f"*{pat}*.jpg")) + sorted(cdir.glob(f"*{pat}*.png"))
-            if hits:
-                return hits[0]
+            for h in (sorted(cdir.glob(f"*{pat}*.jpg")) + sorted(cdir.glob(f"*{pat}*.png"))):
+                if h not in seen:
+                    seen.add(h)
+                    hits.append(h)
+        if hits:
+            land = video_is_landscape(video_path) if video_path else None
+            if land is not None:
+                prefer, avoid = ("_横", "_竖") if land else ("_竖", "_横")
+                got = [h for h in hits if prefer in h.name]
+                if got:
+                    return got[0]
+                got = [h for h in hits if avoid not in h.name]
+                if got:
+                    return got[0]
+            return hits[0]
         return base_cover
 
-    cover_dy = _cover_for(["抖音", "dy"], cover)
-    cover_ks = _cover_for(["快手", "kuaishou"], cover)
-    cover_xhs = _cover_for(["小红书", "xhs"], cover)
+    # 分平台成片先解析：封面要按成片方向匹配（横版片配横版封面）
+    video_dy = resolve_video_for("douyin", ep_dir, video)
+    video_ks = resolve_video_for("kuaishou", ep_dir, video)
+    video_xhs = resolve_video_for("xiaohongshu", ep_dir, video)
+    cover_dy = _cover_for(["抖音", "dy"], cover, video_dy)
+    cover_ks = _cover_for(["快手", "kuaishou"], cover, video_ks)
+    cover_xhs = _cover_for(["小红书", "xhs"], cover, video_xhs)
     if (cover_dy != cover) or (cover_ks != cover) or (cover_xhs != cover):
         log(f"分平台封面：抖音={cover_dy.name}　快手={cover_ks.name}　小红书={cover_xhs.name}")
 
@@ -958,7 +1096,10 @@ def main():
     dy_items = []
 
     if args.platform in ("both", "three", "four", "bilibili"):
-        bili_res = bili_upload(video, cover, bl["title"], bl["desc"], bl["tags"],
+        bili_video = resolve_video_for("bilibili", ep_dir, video)
+        if bili_video != video:
+            log(f"B站成片：{bili_video.name}（分平台专属）")
+        bili_res = bili_upload(bili_video, cover, bl["title"], bl["desc"], bl["tags"],
                                dry_run=args.dry_run)
         if not args.dry_run and bili_res.get("aid"):
             log("\n--- B站回读核验 ---")
@@ -971,7 +1112,10 @@ def main():
     if args.platform in ("both", "three", "four", "douyin"):
         if not by.get("title"):
             raise SystemExit("[X] 解析不到抖音标题")
-        dy_res = douyin_upload(video, cover_dy, by["title"], by["desc"], by["topics"],
+        dy_video = video_dy
+        if dy_video != video:
+            log(f"抖音成片：{dy_video.name}（分平台专属）")
+        dy_res = douyin_upload(dy_video, cover_dy, by["title"], by["desc"], by["topics"],
                                dy_code=args.dy_code, dry_run=args.dry_run,
                                code_timeout=args.code_timeout)
         if not args.dry_run and dy_res.get("gate_timeout"):
@@ -989,7 +1133,10 @@ def main():
         if not ksd.get("title"):
             log("[!] 文案包无快手块（或缺标题），跳过快手")
         else:
-            ks_res = kuaishou_upload(video, cover_ks, ksd["title"], ksd.get("desc", ""),
+            ks_video = video_ks
+            if ks_video != video:
+                log(f"快手成片：{ks_video.name}（分平台专属）")
+            ks_res = kuaishou_upload(ks_video, cover_ks, ksd["title"], ksd.get("desc", ""),
                                      ksd.get("tags", []), dry_run=args.dry_run)
             if not args.dry_run:
                 log("\n--- 快手核验 ---")
@@ -1002,7 +1149,10 @@ def main():
         if not xsd.get("title"):
             log("[!] 文案包无小红书块（或缺标题），跳过小红书")
         else:
-            xhs_res = xiaohongshu_upload(video, cover_xhs, xsd["title"], xsd.get("desc", ""),
+            xhs_video = video_xhs
+            if xhs_video != video:
+                log(f"小红书成片：{xhs_video.name}（分平台专属）")
+            xhs_res = xiaohongshu_upload(xhs_video, cover_xhs, xsd["title"], xsd.get("desc", ""),
                                          xsd.get("tags", []), dry_run=args.dry_run)
             if not args.dry_run:
                 log("\n--- 小红书核验 ---")

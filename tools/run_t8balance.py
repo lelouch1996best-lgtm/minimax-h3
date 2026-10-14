@@ -63,7 +63,7 @@ import subprocess
 import sys
 import time
 
-RH_SCRIPTS = r"d:\work\minimax_h3\.trae\skills\runninghub\scripts"
+RH_SCRIPTS = r"d:\work\minimax_h3\.workbuddy\skills\runninghub\scripts"
 sys.path.insert(0, RH_SCRIPTS)
 from runninghub import require_api_key, upload_file  # 6A：返回 openapi/<hash>.png（勿用 runninghub_app！）
 

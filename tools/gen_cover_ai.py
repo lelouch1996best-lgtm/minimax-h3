@@ -40,6 +40,10 @@ API = os.environ.get('S65535_API_KEY')
 BASE = 'https://task-api-1-cn.65535.space'
 MODEL = 'gpt-image-2.5-flare'
 
+# 2026-10-12：结果 CDN 会 403 掉无 UA 的 urllib 请求（实测踩到）→ 统一带浏览器 UA
+_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+       '(KHTML, like Gecko) Chrome/126.0 Safari/537.36')
+
 
 def build_prompt(title, extra=''):
     """一句式提示词：参考图 + 标题，其余交给模型。"""
@@ -72,6 +76,7 @@ def api(method, path, payload=None, timeout=180):
     data = json.dumps(payload, ensure_ascii=False).encode('utf-8') if payload is not None else None
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header('Authorization', 'Bearer ' + API)
+    req.add_header('User-Agent', _UA)
     if data:
         req.add_header('Content-Type', 'application/json')
     with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -135,8 +140,23 @@ def main():
     if not urls:
         print('无 result_urls:', json.dumps(st, ensure_ascii=False)[:400])
         return 1
-    with urllib.request.urlopen(urls[0], timeout=180) as r:
-        blob = r.read()
+    # 2026-10-12：结果 CDN（task1.65535.space）对无 UA 的 urllib 直接 403 →
+    # 必须带浏览器 UA + Referer，且逐 URL 兜底重试（任务已 done 时别白白重跑）。
+    blob = None
+    for u in urls:
+        try:
+            req = urllib.request.Request(u)
+            req.add_header('User-Agent', _UA)
+            req.add_header('Referer', BASE + '/')
+            req.add_header('Accept', '*/*')
+            with urllib.request.urlopen(req, timeout=180) as r:
+                blob = r.read()
+            break
+        except Exception as e:
+            print('    下载失败 %s ...: %s' % (u[:80], e))
+    if blob is None:
+        print('全部结果 URL 下载失败；任务已 done，可用 --resume-task 补拉（见日志）')
+        return 1
     with open(out, 'wb') as f:                        # 中文路径安全
         f.write(blob)
     print('    -> %.0fKB  %s' % (len(blob) / 1024, out))

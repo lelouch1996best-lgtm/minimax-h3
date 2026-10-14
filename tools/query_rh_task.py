@@ -5,7 +5,7 @@ import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
-sys.path.insert(0, os.path.join(ROOT, ".trae", "skills", "runninghub", "scripts"))
+sys.path.insert(0, os.path.join(ROOT, ".workbuddy", "skills", "runninghub", "scripts"))
 from runninghub import require_api_key  # noqa: E402
 from run_t8balance import query  # noqa: E402
 
